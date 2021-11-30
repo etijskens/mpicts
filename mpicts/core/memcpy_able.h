@@ -33,8 +33,7 @@ namespace mpi
      // Specializations for vector types
         template<typename T, int N>
         struct fixed_size_memcpy_able<Eigen::Matrix<T,N,1,Eigen::DontAlign>> : std::true_type {};
-     // TODO
-     // Also provide specializations for Vector, Point, Quaternion, ...
+     // TODO : Also provide specializations for Vector, Point, Quaternion, ...
 
      //-------------------------------------------------------------------------------------------------
         template<typename T>

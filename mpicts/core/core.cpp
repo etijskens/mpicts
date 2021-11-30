@@ -36,7 +36,7 @@ namespace test7
          // The corresponding MessageItem will only write the number of indices.
             ptr_pc_message_item_ = message().push_back(pc_);
          // Add the arrays
-         // todo: use list of names as argument
+         // todo: use list of names as argument and a suitable default.
             message().push_back(pc_.r, ptr_pc_message_item_);
             message().push_back(pc_.m, ptr_pc_message_item_);
         }
