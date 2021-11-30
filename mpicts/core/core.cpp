@@ -69,8 +69,6 @@ namespace test7
     bool test()
     {
         init();
-     // Todo move this into the init call above
-        theMessageBuffer.initialize(1000, 10);
 
         ParticleContainer pc(8);
         pc.prdbg();

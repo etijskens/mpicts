@@ -44,7 +44,11 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
 
  //---------------------------------------------------------------------------------------------------------------------
  // Initialize MPI
-    void init();
+    void
+    init
+      ( size_t size     = 1000 // amount to be allocated for the messages, not counting the memory for the header section
+      , size_t max_msgs = 10   // maximum number of messages that can be stored.
+      );                       // TODO better default parameters.
 
  //---------------------------------------------------------------------------------------------------------------------
  // finalize MPI

@@ -5,7 +5,7 @@
 #include <sstream>
 #include <chrono>
 #include <cmath>
-
+#include "MessageBuffer.h"
 
 namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
@@ -17,8 +17,11 @@ namespace mpi
 
  //---------------------------------------------------------------------------------------------------------------------
     void
-    init()
-    {// initialize MPI
+    init
+      ( size_t buf_size     // amount to be allocated for the messages, not counting the memory for the header section
+      , size_t max_msgs // maximum number of messages that can be stored.
+      )
+      {// initialize MPI
         int argc = 0;
         char **argv = nullptr;
         int success =
@@ -33,6 +36,7 @@ namespace mpi
         ss<<"MPI rank ["<<rank<<'/'<<size<<']';
         info = ss.str();
 
+        theMessageBuffer.initialize(buf_size, max_msgs);
      // initialize debug output file.
         if constexpr(_debug_)
         {
