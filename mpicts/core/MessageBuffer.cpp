@@ -7,7 +7,7 @@
 
 #define FILL_BUFFER
 
-namespace mpi12s
+namespace mpi
 {   
  //------------------------------------------------------------------------------------------------
  // Implementation of class MessageBuffer       
@@ -24,7 +24,7 @@ namespace mpi12s
     MessageBuffer::
     ~MessageBuffer()
     {
-        if constexpr(::mpi12s::_verbose_)
+        if constexpr(::mpi::_debug_)
             prdbg( tostr("~MessageBuffer(), pBuffer_=", pBuffer_, ", bufferSize_=", bufferSize_, ", bufferOwned_"
                         , bufferOwned_, (bufferOwned_ ? " (to be deleted)." : "")
                         )
@@ -78,7 +78,9 @@ namespace mpi12s
         // std::cout<<"MessageBuffer()::initialize_()"<<pBuffer_<<'/'<<bufferSize_<<'/'<<bufferOwned_<<std::endl;
     }
 
-    void MessageBuffer::clear()
+    void
+    MessageBuffer::
+    clear()
     {// To clear the MessageBuffer, it suffices to set the number of messages to 0
         pBuffer_[0] = 0;
     }
@@ -89,7 +91,7 @@ namespace mpi12s
       ( Index_t  sz                       // the size of the message, in bytes
       , int      from_rank                // the source of the message
       , int      to_rank                  // the destination of the message
-      , ::mpi12s::MessageHandlerKey_t key // the key of the object responsible for reading the message
+      , MessageHandlerKey_t key // the key of the object responsible for reading the message
       , Index_t* the_msgid                // on return contains the id of the allocated message, if provided
       )
     {
@@ -122,24 +124,24 @@ namespace mpi12s
     MessageBuffer::
     headersToStr(bool verbose) const
     {
-        std::stringstream ss;
-        std::vector<std::string> lines;
+        Lines_t lines;
         lines.push_back("MessageBuffer::headersToStr() :");
-
-        ss<<std::setw(5)<<"id"<<std::setw(20)<<"from"<<std::setw(20)<<"to"<<std::setw(20)<<"key"<<std::setw(20)<<"begin"<<std::setw(20)<<"end";
-        lines.push_back(ss.str()); ss.str(std::string());
-
+        lines.push_back( tostr( std::setw(5), "id"
+                              , std::setw(20), "from"
+                              , std::setw(20), "to"
+                              , std::setw(20), "key"
+                              , std::setw(20), "begin"
+                              , std::setw(20), "end" )
+                        );
         Index_t n = (verbose ? maxMessages() : nMessages());
         for( Index_t i = 0; i < n; ++i ) {
-
-            ss<<std::setw( 5)<<( i < maxMessages() ? i : -i)
-              <<std::setw(20)<<messageSource     (i)
-              <<std::setw(20)<<messageDestination(i)
-              <<std::setw(20)<<messageHandlerKey (i)
-              <<std::setw(20)<<messageBegin      (i)
-              <<std::setw(20)<<messageEnd        (i)
-              ;
-        lines.push_back(ss.str()); ss.str(std::string());
+            lines.push_back( tostr( std::setw( 5), ( i < maxMessages() ? i : -i)
+                                  , std::setw(20), messageSource     (i)
+                                  , std::setw(20), messageDestination(i)
+                                  , std::setw(20), messageHandlerKey (i)
+                                  , std::setw(20), messageBegin      (i)
+                                  , std::setw(20), messageEnd        (i) )
+                           );
         }
         return lines;
     }
@@ -153,27 +155,22 @@ namespace mpi12s
         std::vector<std::string> lines;
 
         std::stringstream ss;
-        ss<<"MessageBuffer::messageToStr(msg_id="<<msg_id<<") (raw buffer view)";
-        lines.push_back(ss.str()); ss.str(std::string());
-
-        ss<<std::setw( 7)<<"offset"
-          <<std::setw(20)<<"ptr"
-          <<std::setw(20)<<"size_t"
-          <<std::setw(20)<<"float"
-          <<std::setw(20)<<"double"
-          ;
-        lines.push_back(ss.str()); ss.str(std::string());
-
+        lines.push_back( tostr( "MessageBuffer::messageToStr(msg_id=", msg_id, ") (raw buffer view)" ) );
+        lines.push_back( tostr( std::setw( 7), "offset"
+                              , std::setw(20), "ptr"
+                              , std::setw(20), "size_t"
+                              , std::setw(20), "float"
+                              , std::setw(20), "double" )
+                       );
         Index_t msg_szb = messageSize(msg_id); // in bytes
         void*   msg_ptr = messagePtr (msg_id);
         for( Index_t offset=0; offset < msg_szb; offset += sizeof(float) ) {
-            ss<<std::setw( 7)<<offset
-              <<std::setw(20)<<static_cast<float*>(msg_ptr) + offset/sizeof(float)
-              <<std::setw(24)<<interpretAs<size_t>(msg_ptr, offset)
-              <<std::setw(20)<<interpretAs<float  >(msg_ptr, offset)
-              <<std::setw(20)<<interpretAs<double >(msg_ptr, offset)
-              ;
-            lines.push_back(ss.str()); ss.str(std::string());
+            lines.push_back( tostr( std::setw( 7), offset
+                                  , std::setw(20), static_cast<float*>(msg_ptr) + offset/sizeof(float)
+                                  , std::setw(24), interpretAs<size_t>(msg_ptr, offset)
+                                  , std::setw(20), interpretAs<float  >(msg_ptr, offset)
+                                  , std::setw(20), interpretAs<double >(msg_ptr, offset) )
+                           );
         }
         return lines;
     }
@@ -184,13 +181,13 @@ namespace mpi12s
     MessageBuffer::
     broadcast()
     {// broadcast the size of the header section of all processes
-        std::vector<Index_t> nmessages_per_rank(mpi12s::size);
-        nmessages_per_rank[mpi12s::rank] = nMessages();
-        for( int source = 0; source < mpi12s::size; ++source ) {
+        std::vector<Index_t> nmessages_per_rank(mpi::size);
+        nmessages_per_rank[mpi::rank] = nMessages();
+        for( int source = 0; source < mpi::size; ++source ) {
             MPI_Bcast(&nmessages_per_rank[source], 1, MPI_LONG_LONG_INT, source, MPI_COMM_WORLD);
         }
      // print the number of messages per rank:
-        if constexpr(::mpi12s::_debug_) {
+        if constexpr(::mpi::_debug_) {
             Lines_t lines;
             std::stringstream ss;
             for( size_t i = 0; i < nmessages_per_rank.size(); ++i ) {
@@ -204,15 +201,15 @@ namespace mpi12s
      // All the headers to appear after each other, therefore the buffer location depends on the proces
      // Also note that we do NOT want to send the first entry of the buffer as this contains the number
      // of messages in the header.
-        for( int source = 0; source < mpi12s::size; ++source ) {
-            if( source == ::mpi12s::rank)
+        for( int source = 0; source < mpi::size; ++source ) {
+            if( source == rank)
             {// this process is the root of the broadcast operation (=sender)
                 MPI_Bcast
                 ( &pBuffer_[1]                           // the headers to be sent start here
                                                          // this is the source
                 , HEADER_SIZE*nmessages_per_rank[source]              // number of Index_t items to be sent
                 , MPI_LONG_LONG_INT                      // MPI equivalent of Index_t
-                , source                                 // source rank, equals ::mpi12s::rank
+                , source                                 // source rank, equals ::mpi::rank
                 , MPI_COMM_WORLD
                 );
             } else
@@ -233,7 +230,7 @@ namespace mpi12s
             }
         }
      // print the headers:
-        if constexpr(::mpi12s::_debug_ && _debug_) {
+        if constexpr(::mpi::_debug_ && _debug_) {
             prdbg("MessageBuffer::broadcast() : headers transferred:", headersToStr());
         }
 
@@ -252,9 +249,9 @@ namespace mpi12s
         int elements_added = 0;
         for( Index_t msg_id = 0; msg_id < nMessages(); ++msg_id)
         {
-            if( messageSource(msg_id) == ::mpi12s::rank )
+            if( messageSource(msg_id) == rank )
             {// send the message content
-                if constexpr(::mpi12s::_debug_ && _debug_) {
+                if constexpr(::mpi::_debug_ && _debug_) {
                     prdbg( tostr("MessageBuffer::broadcast() : sending   message content "
                                 , messageSource(msg_id), "->", messageDestination(msg_id)
                                 , ", key=", messageHandlerKey(msg_id))
@@ -272,9 +269,9 @@ namespace mpi12s
                   , &request
                   );
             } else {
-                if( messageDestination(msg_id) == ::mpi12s::rank )
+                if( messageDestination(msg_id) == rank )
                 {// recv the message content
-                    if constexpr(::mpi12s::_debug_ && _debug_) {
+                    if constexpr(::mpi::_debug_ && _debug_) {
                         prdbg( tostr("MessageBuffer::broadcast() : receiving message content "
                                     , messageSource(msg_id), "->", messageDestination(msg_id)
                                     , ", key=", messageHandlerKey(msg_id))
@@ -303,7 +300,7 @@ namespace mpi12s
                     setMessageEnd  (msg_id, end);
 
                  // print the messageBuffer:
-                    if constexpr(::mpi12s::_debug_ && _debug_) {
+                    if constexpr(::mpi::_debug_ && _debug_) {
                         prdbg( tostr( "MessageBuffer::broadcast() : received message content (msg_id=", msg_id, ", "
                                     , messageSource(msg_id), "->", messageDestination(msg_id), ")"
                                     )
@@ -312,10 +309,10 @@ namespace mpi12s
                     }
                 }
                 else {
-                    if constexpr(::mpi12s::_debug_ && _debug_) {
+                    if constexpr(::mpi::_debug_ && _debug_) {
                         prdbg( tostr("MessageBuffer::broadcast() : skipping message  "
                                     , messageSource(msg_id), "->", messageDestination(msg_id)
-                                    , " because it it not for this rank (", ::mpi12s::rank, ")"
+                                    , " because it it not for this rank (", rank, ")"
                                     )
                              );
                     }
@@ -331,28 +328,28 @@ namespace mpi12s
      // Loop over all the received messages.
         for(Index_t msg_id = 0; msg_id < nMessages(); ++msg_id)
         {
-            if( messageSource     (msg_id) != ::mpi12s::rank
-             && messageDestination(msg_id) == ::mpi12s::rank
+            if( messageSource     (msg_id) != ::mpi::rank
+             && messageDestination(msg_id) == rank
               ) {
-                if constexpr(::mpi12s::_debug_ && _debug_)
+                if constexpr(::mpi::_debug_ && _debug_)
                     prdbg( tostr( "MessageBuffer::readMessages() : reading message ", msg_id, "/", nMessages(), ", "
                                 , messageSource(msg_id), "->", messageDestination(msg_id)
                                 )
                          );
              // Fetch the MessageHandler:
-                ::mpi2s::MessageHandlerBase& mh = ::mpi2s::theMessageHandlerRegistry[messageHandlerKey(msg_id)];
+                MessageHandlerBase& mh = theMessageHandlerRegistry[messageHandlerKey(msg_id)];
              // read the message
                 mh.readMessage(msg_id);
 
-                if constexpr(::mpi12s::_debug_ && _debug_)
+                if constexpr(::mpi::_debug_ && _debug_)
                     prdbg( tostr( "MessageBuffer::readMessages() : read message ", msg_id, "/", nMessages(), ", "
                                 , messageSource(msg_id), "->", messageDestination(msg_id)
                                 )
-                         , mh.message().debug_text()
+//                         , mh.message().debug_text()
                          );
             }
             else {
-                if constexpr(::mpi12s::_debug_ && _debug_)
+                if constexpr(::mpi::_debug_ && _debug_)
                     prdbg( tostr( "MessageBuffer::readMessages() : skipping message ", msg_id, "/", nMessages(), ", "
                                 , messageSource(msg_id), "->", messageDestination(msg_id)
                                 )

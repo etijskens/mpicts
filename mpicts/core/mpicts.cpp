@@ -1,4 +1,4 @@
-#include "mpi12s.h"
+#include "mpicts.h"
 
 #include <iostream>
 #include <iomanip>
@@ -7,7 +7,7 @@
 #include <cmath>
 
 
-namespace mpi12s
+namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
     int rank = -1;
     int size = -1;
@@ -15,8 +15,9 @@ namespace mpi12s
     std::string dbg_fname;
     int64_t timestamp0;
 
-
-    void init()
+ //---------------------------------------------------------------------------------------------------------------------
+    void
+    init()
     {// initialize MPI
         int argc = 0;
         char **argv = nullptr;
@@ -55,19 +56,21 @@ namespace mpi12s
             fprintf(fh, "--------------------------------------------------------------------------------\n");
             fprintf(fh, "%s - debug output\n",CINFO);
             fprintf(fh, "--------------------------------------------------------------------------------\n\n");
-            fprintf(fh, "[%lld]\nmpi12s::init()\n", timestamp);
+            fprintf(fh, "[%lld]\nmpi::init()\n", timestamp);
             fprintf(fh, "  %s\n", (success==MPI_SUCCESS ? "MPI_Initialize succeeded." : "MPI_Initialize failed."));
             fprintf(fh, "--------------------------------------------------------------------------------\n\n");
             fclose(fh);
         }
     }
 
-    void finalize()
+ //---------------------------------------------------------------------------------------------------------------------
+    void
+    finalize()
     {
         int success = MPI_Finalize();
-        if constexpr(::mpi12s::_verbose_) {
-            std::string msg = (success==MPI_SUCCESS ? "mpi12s::finalize()\n  MPI_Finalize succeeded."
-                                                    : "mpi12s::finalize()\n  MPI_Finalize failed.");
+        if constexpr(::mpi::_debug_) {
+            std::string msg = (success==MPI_SUCCESS ? "mpi::finalize()\n  MPI_Finalize succeeded."
+                                                    : "mpi::finalize()\n  MPI_Finalize failed.");
             prdbg(msg);
         }
     }
@@ -93,4 +96,4 @@ namespace mpi12s
 
 
  //---------------------------------------------------------------------------------------------------------------------
-}// namespace mpi12s
+}// namespace mpi

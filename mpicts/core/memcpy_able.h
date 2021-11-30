@@ -2,13 +2,10 @@
 #define MEMCPY_ABLE_H
 
 #include <type_traits>
-#include <vector>
-#include <string>
-#include <Eigen/Geometry>
 
-typedef int64_t Index_t;
+#include "mpicts.h"
 
-namespace mpi12s
+namespace mpi
 {//-------------------------------------------------------------------------------------------------
    namespace internal
     {// This contains the machinery
@@ -101,23 +98,33 @@ namespace mpi12s
 
                 if constexpr(fixed_size_memcpy_able<T>::value)
                 {
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst=", dst, ")") );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("t   = ", t) );
+                        lines.push_back( tostr("dst = ", dst) );
+                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst)"), lines );
+                    }
                  // write the variable t
                     auto nBytes = sizeof(t);
                     memcpy( dst, ptr(t), nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(dst, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst=", dst, "), bytes written=sizeof(size_t)", nBytes) );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("bytes written = sizeof(T) = ", nBytes) );
+                        lines.push_back( tostr("next dst = ", dst) );
+                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst)" ), lines );
+                    }
                 }
                 else if constexpr(variable_size_memcpy_able<T>::value)
                 {
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, dst=", dst
-                                    , ") value_type=", typeid(typename T::value_type).name()
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_)
+                    {
+                        Lines_t lines = tolines("t   = ", t);
+                        lines.insert( lines.begin(), tostr("T::value_type = ", typeid(typename T::value_type).name() ) );
+                        lines.push_back(tostr("dst = ", dst));
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst)"), lines );
+                    }
 
                  // write the size of the collection:
                     size_t size = t.size();
@@ -125,22 +132,25 @@ namespace mpi12s
                     memcpy( dst, &size, nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(dst, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst=", dst
-                                    , "), bytes read=sizeof(size_t)=", nBytes
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back(tostr("size = ", size));
+                        lines.push_back(tostr("new dst = ", dst));
+                        lines.push_back(tostr("bytes written=sizeof(size_t)=", nBytes));
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst)"), lines );
+                    }
 
                  // write the collection:
                     nBytes = size * sizeof(typename T::value_type);
                     memcpy( dst, &t[0], nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(dst, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst=", dst
-                                    , "), bytes read=", size, "*", sizeof(typename T::value_type), "=", nBytes
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back(tostr("new dst = ", dst));
+                        lines.push_back(tostr("bytes written = ", size, " * ", sizeof(typename T::value_type), " = ", nBytes));
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::write(t, dst)"), lines);
+                    }
                 }
                 else
                     static_assert(fixed_size_memcpy_able<T>::value || variable_size_memcpy_able<T>::value, "type T is not memcpy-able");
@@ -155,34 +165,46 @@ namespace mpi12s
             {
                 if constexpr(fixed_size_memcpy_able<T>::value)
                 {
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src=", src, ")") );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("src = ", src) );
+                        lines.push_back( tostr("*src = ", *((T*)src)) );
+                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines );
+                    }
                  // read the variable t
                     auto nBytes = sizeof(t);
                     memcpy( ptr(t), src, nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(src, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src=", src, "), bytes read=sizeof(size_t)", nBytes) );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("t = ", t) );
+                        lines.push_back( tostr("next src = ", src) );
+                        lines.push_back( tostr("bytes read = ", nBytes) );
+                        prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines );
+                    }
                 }
                 else if constexpr(variable_size_memcpy_able<T>::value)
                 {
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src=", src
-                                    , ") value_type=", typeid(typename T::value_type).name()
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("value_type = ", typeid(typename T::value_type).name()) );
+                        lines.push_back( tostr("src = ", src) );
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines);
+                    }
                  // read the size of the collection:
                     auto nBytes = sizeof(size_t);
                     size_t size;
                     memcpy( &size, src, nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(src, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src=", src
-                                    , "), bytes read=sizeof(size_t)=", nBytes
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("value_type = ", typeid(typename T::value_type).name()) );
+                        lines.push_back( tostr("bytes read = sizeof(size_t)=", nBytes) );
+                        lines.push_back( tostr("next src = ", src) );
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines );
+                    }
 
                  // resize the collection
                     t.resize(size);
@@ -191,11 +213,13 @@ namespace mpi12s
                     memcpy( &t[0], src, nBytes );
                  // advance the pointer in the buffer
                     advance_void_ptr(src, nBytes);
-                    if constexpr(::mpi12s::_debug_ && _debug_)
-                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src=", src
-                                    , "), bytes read=", size, "*", sizeof(typename T::value_type), "=", nBytes
-                                    )
-                             );
+                    if constexpr(::mpi::_debug_ && _debug_) {
+                        Lines_t lines;
+                        lines.push_back( tostr("value_type = ", typeid(typename T::value_type).name()) );
+                        lines.push_back( tostr("bytes read = ", size, "*", sizeof(typename T::value_type), "=", nBytes) );
+                        lines.push_back( tostr("next src = ", src) );
+                        prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines);
+                    }
 }
                 else
                     static_assert(fixed_size_memcpy_able<T>::value || variable_size_memcpy_able<T>::value, "type T is not memcpy-able");
@@ -228,6 +252,7 @@ namespace mpi12s
                    // the message buffer, i.e. just behind t in the message buffer.
       )
     {
+        if constexpr(_debug_) prdbg(tostr("void read(T& t, void*& src), T=", typeid(T).name()));
         internal::memcpy_traits<T>::read(t,src);
     }
 
@@ -240,6 +265,6 @@ namespace mpi12s
         return internal::memcpy_traits<T>::messageSize(t);
     }
  //-------------------------------------------------------------------------------------------------
-}// namespace mpi12s
+}// namespace mpi
 
 #endif // MEMCPY_ABLE_H

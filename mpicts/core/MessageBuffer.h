@@ -1,13 +1,9 @@
 #ifndef MESSAGEBUFFER_H
 #define MESSAGEBUFFER_H
 
-#include <vector>
-#include <sstream>
-#include <iomanip>
-#include "types.h"
+#include "mpicts.h"
 
-
-namespace mpi12s
+namespace mpi
 {
     template<typename T>
     T&
@@ -66,7 +62,7 @@ namespace mpi12s
           ( Index_t  sz                       // the size of the message, in bytes
           , int      from_rank                // the source of the message (=MPI rank)
           , int      to_rank                  // the destination of the message (=MPI rank)
-          , ::mpi12s::MessageHandlerKey_t key   // the key of the object responsible for reading the message
+          , MessageHandlerKey_t key   // the key of the object responsible for reading the message
           , Index_t* msgid = nullptr          // on return contains the id of the allocated message, if provided
           );
 
