@@ -28,7 +28,7 @@ it with a blocking receive).
 What needs to be modified to turn the one-sided approach into a two-sided approach?
 
 - we do no longer need a MessageBox class but the buffers need to be stored 
-  somewhere, as well as the functions for communiation 
+  somewhere, as well as the functions for communication 
 - we need a header buffer for every other process, 
 - we need a message buffer for every other process, or reuse the message buffers.
   Can we afford a message buffer for every process? I guess not, this is also a 

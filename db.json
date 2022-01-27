@@ -29,5 +29,36 @@
     },
     "API.rst": "\n.. include:: ../mpicts/./core.rst\n",
     "mpicts/__init__.py": "\ntry:\n    import mpicts.core\nexcept ModuleNotFoundError as e:\n    # Try to build this binary extension:\n    from pathlib import Path\n    import click\n    from et_micc2.project import auto_build_binary_extension\n    msg = auto_build_binary_extension(Path(__file__).parent, 'core')\n    if not msg:\n        import mpicts.core\n    else:\n        click.secho(msg, fg='bright_red')"
+  },
+  "core_dyn": {
+    "context": {
+      "verbosity": 1,
+      "project_path": "/Users/etijskens/software/dev/workspace/mpicts",
+      "default_project_path": true,
+      "clear_log": false,
+      "_cfg_filename": "micc3.cfg",
+      "_cfg_dir": "/Users/etijskens/.micc2",
+      "invoked_subcommand": "add",
+      "overwrite_preferences": {},
+      "add_name": "core_dyn",
+      "flag_cli": false,
+      "flag_clisub": false,
+      "flag_py": false,
+      "flag_f90": false,
+      "flag_cpp": true,
+      "overwrite": false,
+      "backup": false,
+      "package_name": "mpicts",
+      "module_location_relative": ".",
+      "module_name": "core_dyn",
+      "module_srcdir": "mpicts/core_dyn",
+      "import_lib": "mpicts.core_dyn",
+      "templates": [
+        "submodule-cpp",
+        "submodule-cpp-test"
+      ]
+    },
+    "API.rst": "\n.. include:: ../mpicts/./core_dyn.rst\n",
+    "mpicts/__init__.py": "\ntry:\n    import mpicts.core_dyn\nexcept ModuleNotFoundError as e:\n    # Try to build this binary extension:\n    from pathlib import Path\n    import click\n    from et_micc2.project import auto_build_binary_extension\n    msg = auto_build_binary_extension(Path(__file__).parent, 'core_dyn')\n    if not msg:\n        import mpicts.core_dyn\n    else:\n        click.secho(msg, fg='bright_red')"
   }
 }

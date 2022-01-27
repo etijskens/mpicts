@@ -18,7 +18,7 @@ namespace mpi
  //---------------------------------------------------------------------------------------------------------------------
     void
     init
-      ( size_t buf_size     // amount to be allocated for the messages, not counting the memory for the header section
+      ( size_t buf_size // amount to be allocated for the messages, not counting the memory for the header section
       , size_t max_msgs // maximum number of messages that can be stored.
       )
       {// initialize MPI
