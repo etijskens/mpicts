@@ -10,43 +10,31 @@
 
 namespace py = pybind11;
 
-void
-add ( py::array_t<double> x
-    , py::array_t<double> y
-    , py::array_t<double> z
-    )
-{
-    auto bufx = x.request()
-       , bufy = y.request()
-       , bufz = z.request()
-       ;
-    if( bufx.ndim != 1
-     || bufy.ndim != 1
-     || bufz.ndim != 1 ) 
-    {
-        throw std::runtime_error("Number of dimensions must be one");
-    }
+#include "mpicts.cpp"
+#include "ParticleContainer.cpp"
+using namespace mpacts;
 
-    if( (bufx.shape[0] != bufy.shape[0])
-     || (bufx.shape[0] != bufz.shape[0]) )
-    {
-        throw std::runtime_error("Input shapes must match");
-    }
- // because the Numpy arrays are mutable by default, py::array_t is mutable too.
- // Below we declare the raw C++ arrays for x and y as const to make their intent clear.
-    double const *ptrx = static_cast<double const *>(bufx.ptr);
-    double const *ptry = static_cast<double const *>(bufy.ptr);
-    double       *ptrz = static_cast<double       *>(bufz.ptr);
+#include "Message.cpp"
+#include "MessageHeader.cpp"
 
-    for (size_t i = 0; i < bufx.shape[0]; i++)
-        ptrz[i] = ptrx[i] + ptry[i];
+
+namespace test7
+{// Non-contiguous approach
+ //---------------------------------------------------------------------------------------------------------------------
+    bool test()
+    {
+        bool ok = false;
+        init();
+
+        std::cout<<::mpi::info<<" done"<<std::endl;
+        finalize();
+        return ok;
+    }
 }
-
-
 PYBIND11_MODULE(core_dyn, m)
 {// optional module doc-string
     m.doc() = "pybind11 core_dyn plugin"; // optional module docstring
  // list the functions you want to expose:
  // m.def("exposed_name", function_pointer, "doc-string for the exposed function");
-    m.def("add", &add, "A function which adds two arrays 'x' and 'y' and stores the result in the third, 'z'.");
+    m.def("test7", &test7::test, "");
 }

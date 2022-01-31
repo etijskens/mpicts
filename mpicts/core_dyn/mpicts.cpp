@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cmath>
 
+
 namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
     int rank = -1;
@@ -16,11 +17,8 @@ namespace mpi
 
  //---------------------------------------------------------------------------------------------------------------------
     void
-    init
-      ( size_t buf_size // amount to be allocated for the messages, not counting the memory for the header section
-      , size_t max_msgs // maximum number of messages that can be stored.
-      )
-      {// initialize MPI
+    init()
+    {// initialize MPI
         int argc = 0;
         char **argv = nullptr;
         int success =
@@ -29,13 +27,17 @@ namespace mpi
      // initialize rank and size
         MPI_Comm_size(MPI_COMM_WORLD, &size);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        int processor_name_size;
+        char processor_name[MPI_MAX_PROCESSOR_NAME];
+        MPI_Get_processor_name(processor_name, &processor_name_size);
 
      // initialize info
         std::stringstream ss;
-        ss<<"MPI rank ["<<rank<<'/'<<size<<']';
+        ss<<"MPI rank ["<<rank<<'/'<<size<<"] (name='"<<processor_name<<"'):";
         info = ss.str();
 
-        theMessageBuffer.initialize(buf_size, max_msgs);
+//        theMessageBuffer.initialize(buf_size, max_msgs);
+
      // initialize debug output file.
         if constexpr(_debug_)
         {
