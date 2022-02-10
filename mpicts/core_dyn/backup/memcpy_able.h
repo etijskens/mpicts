@@ -71,7 +71,7 @@ namespace mpi
          // Compute the size that t will occupy in the message. 
             static 
             size_t      // size that t will occupy in a message, in bytes.
-            computeBufferSize
+            messageSize
               ( T& t    // a T object t, either fixed_size_memcpy_able or variable_size_memcpy_able.
               ) 
             {
@@ -257,11 +257,11 @@ namespace mpi
 
     template <typename T>
     size_t      // returns the size that the T object t will occupy in a message
-    computeBufferSize
+    messageSize
       (  T& t   // a T object, either fixed_size_memcpy_able or variable_size_memcpy_able
       ) 
     {
-        return internal::memcpy_traits<T>::computeBufferSize(t);
+        return internal::memcpy_traits<T>::messageSize(t);
     }
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

@@ -7,22 +7,7 @@
 #include <sstream>
 
 namespace mpi
-{// Although nothing in this file uses MPI, it is necessary machinery for the MPI messageing 
- // system that we need
- 
- //-------------------------------------------------------------------------------------------------
- // Convert a size in bytes, ensuring that the result is rounded up to Boundary. The result is
- // expressed in word of Unit bytes. E.g. 
- //     convertSizeInBytes<8>(4)   -> 8 : the smallest 8 byte boundary >= 4 bytes is 8 bytes
- //     convertSizeInBytes<8,8>(4) -> 8 : the smallest 8 byte boundary >= 4 bytes is 1 8-byte word
- //     convertSizeInBytes<8,2>(4) -> 8 : the smallest 8 byte boundary >= 4 bytes is 4 2-byte words
-    template<size_t Boundary, size_t Unit=1>
-    Index_t convertSizeInBytes(Index_t bytes) {
-        return ((bytes + Boundary - 1) / Boundary) * (Boundary / Unit);
-    }
-
- 
- //-------------------------------------------------------------------------------------------------
+{//-------------------------------------------------------------------------------------------------
     class MessageItemBase
  //-------------------------------------------------------------------------------------------------
         {
@@ -33,7 +18,7 @@ namespace mpi
     // read the message item from src
         virtual void read (void*& src)       = 0;
     // get the size of the message item (in bytes)
-        virtual size_t messageSize() const = 0;
+        virtual size_t computeBufferSize() const = 0;
     };
 
  //-------------------------------------------------------------------------------------------------
@@ -78,8 +63,8 @@ namespace mpi
         }
 
      // Size that *ptrT_ will occupy in a message, in bytes
-        virtual size_t messageSize() const {
-            return ::mpi::messageSize(*ptrT_);
+        virtual size_t computeBufferSize() const {
+            return ::mpi::computeBufferSize(*ptrT_);
         }
     };
  //-------------------------------------------------------------------------------------------------
@@ -165,7 +150,7 @@ namespace mpi
         }
 
      // The number of byte that this MessageItem will occupy in a MessageBuffer
-        virtual size_t messageSize() const {
+        virtual size_t computeBufferSize() const {
             return sizeof(size_t);
         }
    };
@@ -235,19 +220,21 @@ namespace mpi
         }
 
      // The number of bytes that this MessageItem will occupy in a MessageBuffer
-        virtual size_t messageSize() const {
+        virtual size_t computeBufferSize() const {
             return ptr_pc_message_item_->indices().size() * sizeof(T);
         }
     };
  //-------------------------------------------------------------------------------------------------
-    class Message // FIFO list of MessageItem<T>* objects.
+    class MessageItemList // FIFO list of MessageItem<T>* objects.
  // provides member functions to write, read and obtain the size of a message.
  //-------------------------------------------------------------------------------------------------
     {
         static bool const _debug_ = true;
 
+        std::vector<MessageItemBase*> coll_;
+
     public:
-        ~Message();
+        ~MessageItemList();
 
      // Add an item to the message (behaves as FIFO)
         template<typename T> 
@@ -281,11 +268,9 @@ namespace mpi
      // Read the message from ptr in the MessageBuffer
         void read (void*& ptr);
 
-     // The number of bytes the message occupies in the MessageBuffer.
-        size_t messageSize() const;
+     // Compute the number of bytes the message occupies in a MessageBuffer.
+        size_t computeBufferSize() const;
 
-    private:
-        std::vector<MessageItemBase*> coll_;
     };
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

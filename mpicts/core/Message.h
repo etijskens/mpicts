@@ -246,6 +246,8 @@ namespace mpi
     {
         static bool const _debug_ = true;
 
+        std::vector<MessageItemBase*> coll_;
+
     public:
         ~Message();
 
@@ -284,8 +286,6 @@ namespace mpi
      // The number of bytes the message occupies in the MessageBuffer.
         size_t messageSize() const;
 
-    private:
-        std::vector<MessageItemBase*> coll_;
     };
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

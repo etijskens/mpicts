@@ -1,24 +1,24 @@
-#include "Message.h"
+#include "MessageItemList.h"
 
 namespace mpi
 {
  //-------------------------------------------------------------------------------------------------
- // Implementation of class Message
+ // Implementation of class MessageItemList
  //-------------------------------------------------------------------------------------------------
-    Message::
-    ~Message()
+    MessageItemList::
+    ~MessageItemList()
     {
         if constexpr(::mpi::_debug_ && _debug_)
-            prdbg("~Message() : deleting MessageItems");
+            prdbg("~MessageItemList() : deleting MessageItems");
         for( auto p : coll_) {
             delete p;
         }
         if constexpr(::mpi::_debug_ && _debug_)
-            prdbg("~Message() : MessageItems deleted.");
+            prdbg("~MessageItemList() : MessageItems deleted.");
     }
 
     void
-    Message::
+    MessageItemList::
     write
       ( void*& ptr // pointer where the message should be written to.
       ) const
@@ -31,7 +31,7 @@ namespace mpi
     }
 
     void
-    Message::
+    MessageItemList::
     read
       ( void*& ptr // pointer where the message should be read from.
       )
@@ -44,20 +44,20 @@ namespace mpi
     }
 
     size_t // the number of bytes the mesage occupies in the MessageBuffer
-    Message::
-    messageSize() const
+    MessageItemList::
+    computeBufferSize() const
     {
         size_t sz = 0;
         MessageItemBase * const * pBegin = &coll_[0];
         MessageItemBase * const * pEnd   = pBegin + coll_.size();
         for( MessageItemBase * const * p = pBegin; p < pEnd; ++p) {
-            sz += (*p)->messageSize();
+            sz += (*p)->computeBufferSize();
         }
         return sz;
     }
 
 //    Lines_t
-//    Message::
+//    MessageItemList::
 //    debug_text() const
 //    {
 //        Lines_t lines;

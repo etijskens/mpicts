@@ -10,14 +10,11 @@
 
 namespace py = pybind11;
 
+#include "mpicts.cpp"
 #include "ParticleContainer.cpp"
 using namespace mpacts;
 
-#include "mpicts.cpp"
-#include "MessageItemList.cpp"
-#include "MessageHandler.cpp"
-#include "MessageBuffer.cpp"
-#include "MessageSet.cpp"
+#include "Messages.cpp"
 
 
 namespace test7
