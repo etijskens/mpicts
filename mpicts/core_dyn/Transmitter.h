@@ -3,13 +3,13 @@
 
 #include <vector>
 #include "mpicts.h"
-#include "MessageCollection.h"
+#include "MessageSet.h"
 
 namespace mpi
 {//------------------------------------------------------------------------------------------------
     class Transmitter
     {
-        std::vector<MessageCollection> processMessages_; // One MessageCollection per MPI proces
+        std::vector<MessageSet> processMessages_; // One MessageSet per MPI proces
         std::vector<Index_t> nMessages_; // number of message in each MPI rank
     public:
         Transmitter();

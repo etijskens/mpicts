@@ -80,6 +80,23 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
  // implementation of class MessageSet
  //------------------------------------------------------------------------------------------------
+    void
+    MessageSet::
+    resize( size_t n )
+    {
+        messageHeaders_.resize(n);
+        messages_      .resize(n);
+        for( size_t i=0; i < n; ++i )
+        {
+            MessageHeader& header = messageHeaders_[i];
+            header.destination           = -1;
+            header.source                = -1;
+            header.messageHandlerKey     = -1;
+            header.size                  =  0;
+            messages_[i].pMessageHeader_ = &header;
+        }
+    }
+ //------------------------------------------------------------------------------------------------
     Message&      // index of the added message
     MessageSet::
     addMessage  // add the message defined by messageHandler to the MessageSet

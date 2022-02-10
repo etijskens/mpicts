@@ -28,7 +28,7 @@ namespace mpi
     Transmitter::
     encodeMessages_()
     {
-        MessageSet& thisRanksMessages = processMessages_[mpi::rank]  
+        MessageSet& thisRanksMessages = processMessages_[mpi::rank];
         for ( MessageSet::iterator iter = thisRanksMessages.begin()
             ; iter != thisRanksMessages.end()
             ; ++iter )
@@ -47,21 +47,23 @@ namespace mpi
             MPI_Bcast(&nMessages_[source], 1, MPI_LONG_LONG_INT, source, MPI_COMM_WORLD);
         }
 
-        if constexpr(::mpi::_debug_)
-        {// print the number of messages per rank:
-            Lines_t lines;
-            std::stringstream ss;
-            for( int r = 0; r < mpi::size; ++r ) {
-                ss<<"r"<<i<<std::setw(6)<<nMessages_[i];
-                lines.push_back(ss.str()); ss.str(std::string());
-            }
-            prdbg( tostr("broadcast(): number of messages in each rank:"), lines );
-        }
+//        if constexpr(::mpi::_debug_)
+//        {// print the number of messages per rank:
+//            Lines_t lines;
+//            std::stringstream ss;
+//            for( int r = 0; r < mpi::size; ++r ) {
+//                ss<<"r"<<i<<std::setw(6)<<nMessages_[i];
+//                lines.push_back(ss.str()); ss.str(std::string());
+//            }
+//            prdbg( tostr("broadcast(): number of messages in each rank:"), lines );
+//        }
 
-     // Adjust the size of each rank's MessageSet:
-        for( int r = 0; r < mpi::size; ++r ) {
-            auto n = nMessages_[i];
-            processMessages_[r].resize(n);
+     // Adjust the size of MessageSet of the receiving ranks:
+        for( int rnk = 0; rnk < mpi::size; ++rnk ) {
+            if( rnk != mpi::rank ) {
+                auto n = nMessages_[rnk];
+                processMessages_[rnk].resize(n);
+            }
         }
 
      // Broadcast the header section of all MPI ranks:
@@ -69,26 +71,26 @@ namespace mpi
      // Also note that we do NOT want to send the first entry of the buffer as this contains the number
      // of messages in the header.
         for( int source = 0; source < mpi::size; ++source ) {
-            MPI_Bcast
-            ( processMessages_[source].pHeaders()
-            , processMessages_[source].size() * sizeof(MessageHeader) // # of bytes
-            , MPI_CHAR 
-            , source
-            , MPI_COMM_WORLD
-            );
+//            MPI_Bcast
+//            ( processMessages_[source].pHeaders()
+//            , processMessages_[source].size() * sizeof(MessageHeader) // # of bytes
+//            , MPI_CHAR
+//            , source
+//            , MPI_COMM_WORLD
+//            );
         }
 
-        if constexpr(::mpi::_debug_ && _debug_)
-        {// print the headers:
-            prdbg("MessageBuffer::broadcast() : headers transferred:", headersToStr());
-        }
+//        if constexpr(::mpi::_debug_ && _debug_)
+//        {// print the headers:
+//            prdbg("MessageBuffer::broadcast() : headers transferred:", headersToStr());
+//        }
     }
 
     void
     Transmitter::
     sendMessages_()
     {
-        MessageSet& thisRanksMessages = processMessages_[mpi::rank]
+        MessageSet& thisRanksMessages = processMessages_[mpi::rank];
         for ( MessageSet::iterator iter = thisRanksMessages.begin()
             ; iter != thisRanksMessages.end()
             ; ++iter )
@@ -113,7 +115,7 @@ namespace mpi
                     ; iter != messages.end()
                     ; ++iter )
                 {// we must only provide buffers for messages sent to the current rank
-                    if ( iter->toRank() == mpi::rank )
+                    if ( iter->destination() == mpi::rank )
                         iter->adjustBuffer();
                 }
             }
@@ -126,8 +128,8 @@ namespace mpi
                     ; iter != messages.end()
                     ; ++iter )
                 {// we must only receive messages sent to the current rank
-                    if ( iter->toRank() == mpi::rank )
-                        iter->receiveBuffer_();
+                    if ( iter->destination() == mpi::rank )
+                        iter->recvBuffer();
                 }
             }
         }
@@ -145,8 +147,8 @@ namespace mpi
                     ; iter != messages.end()
                     ; ++iter )
                 {// we must only receive messages sent to the current rank
-                    if ( iter->toRank() == mpi::rank )
-                        iter->decode_();
+                    if ( iter->destination() == mpi::rank )
+                        iter->readBuffer();
                 }
             }
         }

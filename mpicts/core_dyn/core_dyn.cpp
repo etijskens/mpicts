@@ -18,7 +18,7 @@ using namespace mpacts;
 #include "MessageHandler.cpp"
 #include "MessageBuffer.cpp"
 #include "MessageSet.cpp"
-
+#include "Transmitter.cpp"
 
 namespace test7
 {// Non-contiguous approach

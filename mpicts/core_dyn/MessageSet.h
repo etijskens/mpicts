@@ -11,9 +11,9 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     {
         MessageHandlerKey_t messageHandlerKey;  // MessageHandler key of the message
-        size_t  size; // message size in bytes
-        int     from; // the source MPI rank of the message
-        int     to;   // the destination MPI rank of the message
+        size_t size;     // message size in bytes
+        int source;      // the source MPI rank of the message
+        int destination; // the destination MPI rank of the message
     };
 
  //------------------------------------------------------------------------------------------------
@@ -30,18 +30,18 @@ namespace mpi
     public:
      // read access member functions
         void* messageBuffer() const { return messageBuffer_.data(); }
-        int destination()     const { return pMessageHeader_->to; }
-        int source()          const { return pMessageHeader_->from; }
+        int destination()     const { return pMessageHeader_->destination; }
+        int source()          const { return pMessageHeader_->source; }
         Index_t bufferSize()  const { return pMessageHeader_->size; }
         MessageHandlerKey_t
             messageHandlerKey()  const { return pMessageHeader_->messageHandlerKey; }
         MessageHandlerBase& messageHandler() const;
 
      // write access member functions
-        void setDestination(int to) { pMessageHeader_->to = to; }
-        void setSource(int from)    { pMessageHeader_->from = from; }
+        void setDestination(int destination) { pMessageHeader_->destination = destination; }
+        void setSource(int source)           { pMessageHeader_->source = source; }
         void setMessageHandlerKey(MessageHandlerKey_t key)
-                                           { pMessageHeader_->messageHandlerKey = key; }
+                                             { pMessageHeader_->messageHandlerKey = key; }
 
      // functionality
         void computeBufferSize();
@@ -60,6 +60,8 @@ namespace mpi
         std::vector<MessageHeader> messageHeaders_;
         std::vector<Message>       messages_;
     public:
+        void resize( size_t n ); // initialize n empty Messages.
+        size_t size() const { return messages_.size(); }
 
         Message&
         addMessage      // add the message defined by `messageHandler` to the MessageSet
@@ -68,7 +70,7 @@ namespace mpi
           , MessageHandlerBase& messageHandler
           );
 
-        size_t size() const { return messages_.size(); }
+
 
      // machinery for iterating over the Messages
         typedef std::vector<Message>::iterator iterator;
