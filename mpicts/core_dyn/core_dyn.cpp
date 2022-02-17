@@ -43,16 +43,16 @@ namespace test
     bool test_MessageBufferPool()
     {
         MessageBufferPool pool;
-        pool.info();
+        std::cout<<pool.info()<<std::endl;
         {
             SharedBuffer sb0 = pool.getBuffer(10);
-            sb0.info();
-            pool.info();
+            std::cout<<sb0.info()<<std::endl;
+            std::cout<<pool.info()<<std::endl;
             SharedBuffer sb1 = pool.getBuffer(20);
-            sb1.info();
-            pool.info();
+            std::cout<<sb1.info()<<std::endl;
+            std::cout<<pool.info()<<std::endl;
         }
-        pool.info();
+        std::cout<<pool.info()<<std::endl;
         return true;
     }
 
@@ -60,8 +60,8 @@ namespace test
     bool test_MessageHeader()
     {
         MessageHeader mh0(0,2,3,4);
-        mh0.info();
-        MessageHeader::theHeadersInfo();
+        std::cout<<mh0.info()<<std::endl;
+        std::cout<<MessageHeader::theHeadersInfo()<<std::endl;
 //        MessageHeader::theHeaders[0].info("1");
 //        MessageHeader mh1(0,1,2,3);
 //        MessageHeader::theHeaders[0].info("1");

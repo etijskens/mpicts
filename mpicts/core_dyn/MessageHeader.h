@@ -63,7 +63,7 @@ namespace mpi
             headers_.resize(nHeaders);
         }
 
-        void info( std::string const& s = std::string() ) const;
+        std::string info( std::string const& s = std::string() ) const;
 
     private:
         void computeNBytesPerHeader_();
@@ -83,7 +83,7 @@ namespace mpi
         static std::vector<MessageHeaderContainer> theHeaders;
          // One MessageHeaderContainer per MPI rank
 
-        static void theHeadersInfo( std::string const& s = std::string() );
+        static std::string theHeadersInfo( std::string const& s = std::string() );
 
     public:
         MessageHeader
@@ -108,7 +108,7 @@ namespace mpi
         size_t  size()             const { return theHeaders[src_][i_].size; }
         size_t& size()                   { return theHeaders[src_][i_].size; }
 
-        void info( std::string const& s = std::string() ) const;
+        std::string info( std::string const& s = std::string() ) const;
 
     private:
         void alloc_();

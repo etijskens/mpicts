@@ -55,11 +55,11 @@ namespace mpi
         ~Buffer()
         {
             if( pBytes_ ) {
-                std::cout<<"\n~Buffer(): delete[] "<<pBytes_<<std::flush;
+                //std::cout<<"\n~Buffer(): delete[] "<<pBytes_<<std::flush;
                 delete[] pBytes_;
-                std::cout<<", deleted."<<std::endl;
+                //std::cout<<", deleted."<<std::endl;
             } else {
-                std::cout<<"~Buffer() with nullptr"<<std::endl;
+                //std::cout<<"~Buffer() with nullptr"<<std::endl;
             }
         }
 

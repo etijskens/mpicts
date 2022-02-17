@@ -32,7 +32,7 @@ def test_MessageHeader():
 # (normally all tests are run with pytest)
 #===============================================================================
 if __name__ == "__main__":
-    the_test_you_want_to_debug = test_MessageBuffer
+    the_test_you_want_to_debug = test_MessageHeader
 
     print(f"__main__ running {the_test_you_want_to_debug} ...")
     the_test_you_want_to_debug()

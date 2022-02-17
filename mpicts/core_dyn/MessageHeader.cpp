@@ -42,22 +42,22 @@ namespace mpi
         }
     }
 
-    void
+    std::string
     MessageHeaderContainer::
     info( std::string const& s ) const
     {
-        std::cout
-            <<  "MessageHeaderContainer::info("<<s<<")"
+        std::stringstream ss;
+        ss  <<  "MessageHeaderContainer::info("<<s<<")"
             <<"\n    nBytesPerHeader           : "<<nBytesPerHeader
             <<"\n    sizeof(MessageHeaderData) : "<<sizeof(MessageHeaderData)
             <<"\n    size                      : "<<headers_.size()
             ;
         for( size_t i=0; i < headers_.size(); ++i ){
             MessageHeaderData const h = headers_[i];
-            std::cout<<"\n    "<<i<<" { src="<<h.source<<", dst="<<h.destination<<", key="<<h.key<<", size="<<h.size<<" }";
+            ss<<"\n    "<<i<<" { src="<<h.source<<", dst="<<h.destination<<", key="<<h.key<<", size="<<h.size<<" }";
         }
-        std::cout
-            <<std::endl;
+        ss<<std::endl;
+        return ss.str();
     }
 
  //------------------------------------------------------------------------------------------------
@@ -112,29 +112,34 @@ namespace mpi
         i_ = theHeaders[src_].addHeader();
     }
 
-    void
+    std::string
     MessageHeader::
     theHeadersInfo( std::string const& s )
     {
-        std::cout<<"All MessageHeaderContainers:";
+        std::stringstream ss;
+        ss  <<"All MessageHeaderContainers: size="<<theHeaders.size() ;
         for( int rnk = 0; rnk < theHeaders.size(); ++rnk )
         {
-            std::cout<<"\nMPI rank "<<rnk<<": ";
-            theHeaders[rnk].info();
+            ss<<"\nMPI rank "<<rnk<<": "
+              <<theHeaders[rnk].info();
         }
+        ss<<std::endl;
+        return ss.str();
     }
 
-    void
+    std::string
     MessageHeader::
     info( std::string const& s ) const
     {
+        std::stringstream ss;
         MessageHeaderData const h = theHeaders[src_][i_];
-        std::cout
+        ss
         <<  "MessageHeader: "<<s
         <<"\n    src :"<< src_
         <<"\n    loc :"<< i_
         <<"\n    { src="<<h.source<<", dst="<<h.destination<<", key="<<h.key<<", size="<<h.size<<" }"
         <<std::endl;
+        return ss.str();
     }
 
  //------------------------------------------------------------------------------------------------
