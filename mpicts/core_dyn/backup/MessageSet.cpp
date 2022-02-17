@@ -14,18 +14,16 @@ namespace mpi
 
     void
     Message::
-    computeBufferSize()
+    computeBufferSize() // Compute the size of the message and store it in the header of the message
     {
         pMessageHeader_->size = messageHandler().computeBufferSize();
     }
 
-
     void
     Message::
-    adjustBuffer() // adjust the MessageBuffer to the size in the MessageHeader.
+    adjustBuffer() // adjust the MessageBuffer to the size specified in the MessageHeader.
     {
-        size_t messageSize = pMessageHeader_->size;
-        messageBuffer_.allocate(messageSize);
+        messageBuffer_.allocate(pMessageHeader_->size);
     }
 
     void
@@ -100,18 +98,17 @@ namespace mpi
     Message&      // index of the added message
     MessageSet::
     addMessage  // add the message defined by messageHandler to the MessageSet
-      ( int to_rank
+      ( int destination
       , MessageHandlerBase& messageHandler
       )
-    {
+    {// add a empty message by calling resize:
         size_t nMessages = messages_.size();
         messages_      .resize(nMessages+1);
         messageHeaders_.resize(nMessages+1);
-
         Message& message = messages_[nMessages];
+     // initialize the message
         message.pMessageHeader_ = &messageHeaders_[nMessages];
-
-        message.setDestination( to_rank );
+        message.setDestination( destination );
         message.setSource( mpi::rank );
         message.setMessageHandlerKey( messageHandler.key() );
      // message.computeBufferSize();

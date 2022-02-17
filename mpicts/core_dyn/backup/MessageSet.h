@@ -27,6 +27,8 @@ namespace mpi
         MessageBuffer  messageBuffer_;  //
         MessageHeader* pMessageHeader_; // to access message header properties from the message body.
          // Note that pMessageHeader_ points to an entry in the MessageSet's messageHeaders std::vector.
+        ExtraMessageData * pMessageData_;
+
     public:
      // read access member functions
         void* messageBuffer() const { return messageBuffer_.data(); }
@@ -44,12 +46,13 @@ namespace mpi
                                              { pMessageHeader_->messageHandlerKey = key; }
 
      // functionality
-        void computeBufferSize();
-        void adjustBuffer(); // adjust the MessageBuffer to the size in the MessageHeader.
-        void writeBuffer();  // write the message to the buffer
-        void sendBuffer();   // send the buffer to its destination MPI rank.
-        void recvBuffer();   // receive the buffer
-        void readBuffer();   // decode the buffer
+        void computeBufferSize(); // Compute the size of the message and store it in the header
+                                  // of the message must be called before headers are sent...
+        void adjustBuffer();      // adjust the MessageBuffer to the size in the MessageHeader.
+        void writeBuffer();       // write the message to the buffer
+        void sendBuffer();        // send the buffer to its destination MPI rank.
+        void recvBuffer();        // receive the buffer
+        void readBuffer();        // read the message from the buffer
     };
  //------------------------------------------------------------------------------------------------
     MessageHandlerBase& getMessageHandler(MessageHeader* pMessageHeader);
@@ -57,20 +60,20 @@ namespace mpi
     class MessageSet
  //------------------------------------------------------------------------------------------------
     {
-        std::vector<MessageHeader> messageHeaders_;
+        std::vector<MessageHeader> messageHeaders_; // its data() member serves as a buffer for
+                                                    // MPI_bcast-ing all the message headers
         std::vector<Message>       messages_;
+
     public:
         void resize( size_t n ); // initialize n empty Messages.
         size_t size() const { return messages_.size(); }
 
         Message&
-        addMessage      // add the message defined by `messageHandler` to the MessageSet
-                        // This function is called by the sending process.
-          ( int to_rank // destination MPI rank of the mesage
+        addMessage // add the message defined by `messageHandler` to the MessageSet
+                   // This function is called by the sending process.
+          ( int destination // destination MPI rank of the mesage
           , MessageHandlerBase& messageHandler
           );
-
-
 
      // machinery for iterating over the Messages
         typedef std::vector<Message>::iterator iterator;

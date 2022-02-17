@@ -7,6 +7,7 @@ Tests for C++ module mpicts.core_dyn.
 
 import os
 import sys
+sys.path.insert(0,'.')
 
 import numpy as np
 
@@ -16,14 +17,14 @@ import mpicts
 cpp = mpicts.core_dyn
 
 
-def test_cpp_add():
-    x = np.array([0,1,2,3,4],dtype=float)
-    shape = x.shape
-    y = np.ones (shape,dtype=float)
-    z = np.zeros(shape,dtype=float)
-    expected_z = x + y
-    result = cpp.add(x,y,z)
-    assert (z == expected_z).all()
+def test_MessageBuffer():
+    cpp.test_MessageBuffer()
+
+def test_MessageBufferPool():
+    cpp.test_MessageBufferPool()
+
+def test_MessageHeader():
+    cpp.test_MessageHeader()
 
 
 #===============================================================================
@@ -31,7 +32,7 @@ def test_cpp_add():
 # (normally all tests are run with pytest)
 #===============================================================================
 if __name__ == "__main__":
-    the_test_you_want_to_debug = test_cpp_add
+    the_test_you_want_to_debug = test_MessageBuffer
 
     print(f"__main__ running {the_test_you_want_to_debug} ...")
     the_test_you_want_to_debug()

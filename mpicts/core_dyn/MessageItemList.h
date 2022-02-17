@@ -18,7 +18,7 @@ namespace mpi
     // read the message item from src
         virtual void read (void*& src)       = 0;
     // get the size of the message item (in bytes)
-        virtual size_t computeBufferSize() const = 0;
+        virtual size_t computeByteSize() const = 0;
     };
 
  //-------------------------------------------------------------------------------------------------
@@ -63,175 +63,18 @@ namespace mpi
         }
 
      // Size that *ptrT_ will occupy in a message, in bytes
-        virtual size_t computeBufferSize() const {
-            return ::mpi::computeBufferSize(*ptrT_);
+        virtual size_t computeByteSize() const {
+            return ::mpi::computeByteSize(*ptrT_);
         }
     };
- //-------------------------------------------------------------------------------------------------
- // Specialisation
-    template <>
-    class MessageItem<ParticleContainer> : public MessageItemBase
- //-------------------------------------------------------------------------------------------------
-    {
-        static const bool _debug_ = true; // write debug output or not
-
-    private: // data members
-        ParticleContainer* ptr_pc_;
-        Indices_t indices_;
-        bool move_;
-    public:
-     // ctor
-        MessageItem
-          ( ParticleContainer& pc
-          )
-          : ptr_pc_(&pc)
-        {}
-
-     // Set the selection of particles ane whether to move or copy them,
-        void
-        select
-          ( Indices_t& indices // list of particles to be moved/copied.
-          , bool move          // choose between moving or copying the particles to the other proces
-          )
-        {
-            indices_ = indices; // make a copy
-            move_ = move;
-        }
-
-     // indices accessor
-        Indices_t const& indices() const { return indices_; }
-        Indices_t      & indices()       { return indices_; }
-
-     // dtor
-        ~MessageItem()
-        {
-            if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~MessageItem<ParticleContainer>()"));
-            }
-        }
-
-     // Write the number of selected particles to the MessageBuffer. This is all the reader has to know
-     // (how many new particles must be created). Remove the particle from the ParticleContainer if requested.
-        virtual
-        void
-        write
-          ( void*& dst // pointer in the MessageBuffer where this item must be written.
-                       // Is advanced by the number of bytes written on return
-          ) const
-       {
-            if constexpr(::mpi::_debug_ && _debug_) {
-                Lines_t lines = tolines("indices ", indices());
-                lines.push_back( tostr("move = ", move_, (move_ ? "(particles are deleted)" : "(particles are copied)")) );
-                prdbg( tostr("MessageItem<ParticleContainer>::write(dst)"), lines );
-            }
-
-            size_t nParticles = indices_.size();
-            ::mpi::write( nParticles, dst );
-            if( move_ )
-            {// Remove the particles from the ParticleContainer
-                for( auto index : indices_ )
-                    ptr_pc_->remove(index);
-            }
-        }
-
-     // Read the number of selected particles and create as many new particles in the ParticleContainer.
-        virtual void read(void*& src)
-        {
-            Index_t n;
-            ::mpi::read( n, src );
-         // create n new particles
-            indices_.resize(n);
-            for( size_t i = 0; i < n; ++i )
-                indices_[i] = ptr_pc_->add();
-
-            if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleContainer>::read(src)"), tolines("new indices", indices_) );
-            }
-        }
-
-     // The number of byte that this MessageItem will occupy in a MessageBuffer
-        virtual size_t computeBufferSize() const {
-            return sizeof(size_t);
-        }
-   };
- //-------------------------------------------------------------------------------------------------
- // Specialisation
-    template <typename T>
-    class MessageItem<ParticleArray<T>> : public MessageItemBase
- //-------------------------------------------------------------------------------------------------
-    {
-        static const bool _debug_ = true; // write debug output or not
-
-    private: // data members
-        ParticleArray<T>* ptr_pa_;
-        MessageItem<ParticleContainer>* ptr_pc_message_item_;
-
-    public:
-     // ctor
-        MessageItem
-          ( ParticleArray<T>& pa
-          , MessageItemBase* ptr_pc_message_item
-          )
-          : ptr_pa_(&pa)
-          , ptr_pc_message_item_( dynamic_cast<MessageItem<ParticleContainer>*>(ptr_pc_message_item) )
-        {}
-
-     // dtor
-        ~MessageItem()
-        {
-            if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~MessageItem<ParticleArray<T=", typeid(T).name(), ">>()"));
-            }
-        }
-
-     // Write the selected array elements to the MessageBuffer
-        virtual
-        void
-        write
-          ( void*& dst // pointer in the MessageBuffer where this item must be written.
-                       // Is advanced by the number of bytes written on return
-          ) const
-       {
-            if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::write(dst)")
-                     , tolines(ptr_pa_->name(), *ptr_pa_, ptr_pc_message_item_->indices() )
-                     );
-            }
-            for( auto index : ptr_pc_message_item_->indices() )
-                ::mpi::write( (*ptr_pa_)[index], dst );
-        }
-
-     // Read the selected particles from src
-        virtual
-        void
-        read
-          ( void*& src // pointer in the MessageBuffer where this item must be written.
-                       // Is advanced by the number of bytes written on return
-          )
-        {
-            for( auto index : ptr_pc_message_item_->indices() )
-                ::mpi::read( (*ptr_pa_)[index], src );
-
-            if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::read(src)")
-                     , tolines(ptr_pa_->name(), *ptr_pa_, ptr_pc_message_item_->indices() )
-                     );
-            }
-        }
-
-     // The number of bytes that this MessageItem will occupy in a MessageBuffer
-        virtual size_t computeBufferSize() const {
-            return ptr_pc_message_item_->indices().size() * sizeof(T);
-        }
-    };
- //-------------------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------------------
     class MessageItemList // FIFO list of MessageItem<T>* objects.
  // provides member functions to write, read and obtain the size of a message.
  //-------------------------------------------------------------------------------------------------
     {
         static bool const _debug_ = true;
 
-        std::vector<MessageItemBase*> coll_;
+        std::vector<MessageItemBase*> list_;
 
     public:
         ~MessageItemList();
@@ -244,11 +87,11 @@ namespace mpi
           )
         {
             MessageItem<T>* p = new MessageItem<T>(t);
-            coll_.push_back(p);
+            list_.push_back(p);
             return p;
         }
 
-     // Add an item to the message (behaves as FIFO)
+     // Add an item to the message
         template<typename T>
         MessageItem<T>* // Return the constructed MessageItem. Occasionally needed.
         push_back
@@ -258,7 +101,7 @@ namespace mpi
           )
         {
             MessageItem<T>* p = new MessageItem<T>(t, ptr_mi);
-            coll_.push_back(p);
+            list_.push_back(p);
             return p;
         }
 

@@ -32,15 +32,15 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
 
  //---------------------------------------------------------------------------------------------------------------------
  // typedefs
-    typedef std::vector<std::string> Lines_t;
-    typedef size_t MessageHandlerKey_t;
+    using Lines_t = std::vector<std::string>;
+    using MessageHandlerKey_t = size_t;
      // This type may be modified, but there are some constraints:
      // Because we need to know the key before the message can be received, it is necessary
      // that it can be stored in the header section of MessageBuffers. Therefor, it must be
      // of fixed size, and, preferentially, a size that is a multiple of sizeof(Index_t).
 
-    typedef int64_t Index_t; // copied from Primitives/Types/Index.h
-    typedef std::vector<Index_t> Indices_t; // list of indices
+    using Index_t = int64_t; // copied from Primitives/Types/Index.h
+    using Indices_t = std::vector<Index_t>; // list of indices
 
  //---------------------------------------------------------------------------------------------------------------------
  // Initialize MPI

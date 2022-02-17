@@ -14,18 +14,24 @@ namespace mpi
     public:
         Transmitter();
 
+        void addMessage(MessageHandlerBase& messageHandler, int destination, ExtraMessageData const* emd);
+
         void transmit();
          // Transmit all messages. That means:
          //   - send all messages of the current MPI rank to their destinations, and
          //   - receive the messages from other MPI rank meant for the current rank.
     private:
      // transmit() components:
+        void computeBufferSizes_();
         void encodeMessages_();
         void sendHeaders_();
         void sendMessages_();
         void receiveMessages_();
         void decodeMessages_();
     };
+ //------------------------------------------------------------------------------------------------
+ // Global Transmitter
+    extern Transmitter theTransmitter;
  //------------------------------------------------------------------------------------------------
 }// namespace mpi
 

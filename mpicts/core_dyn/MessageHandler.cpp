@@ -11,35 +11,56 @@ namespace mpi
 
     void
     MessageHandlerRegistry::
-    registerMessageHandler(MessageHandlerBase* messageHandler)
+    registerMessageHandler(MessageHandler* messageHandler)
     {
         registry_[counter_] = messageHandler;
         messageHandler->key_ = counter_;
         ++counter_;
     }
 
-    MessageHandlerRegistry theMessageHandlerRegistry;
+ // MessageHandlerRegistry theMessageHandlerRegistry;
 
  //------------------------------------------------------------------------------------------------
  // MessageHandlerRegistry implementation
  //------------------------------------------------------------------------------------------------
-    MessageHandlerBase::
-    MessageHandlerBase()
+    MessageHandler::
+    ~MessageHandler()
     {
-        theMessageHandlerRegistry.registerMessageHandler(this);
+        if constexpr(::mpi::_debug_ && _debug_)
+            prdbg( "~MessageHandler()" );
+     // destroy the MessageData objects in messageDataList_:
+        for( auto pMessageData : messageDataList_ )
+        {
+            if( pMessageData ) {
+                if constexpr(::mpi::_debug_ && _debug_) prdbg(tostr("delete ", pMessageData));
+                delete pMessageData;
+            } else {
+                if constexpr(::mpi::_debug_ && _debug_) prdbg("pMessageData == nullptr");
+
+            }
+        }
+    }
+ //------------------------------------------------------------------------------------------------
+
+    void
+    MessageHandler::
+    addMessage(int destination)
+    {
+        messageDataList_.push_back(new MessageData( mpi::rank, destination, this->key_ ));
     }
 
  //------------------------------------------------------------------------------------------------
-    MessageHandlerBase::
-    ~MessageHandlerBase()
+
+    size_t // buffer size in number of bytes.
+    MessageHandler::
+    computeBufferSize()
     {
-        if constexpr(::mpi::_debug_ && _debug_)
-            prdbg( "~MessageHandlerBase()" );
+        return messageItemList_.computeBufferSize();
     }
 
  //------------------------------------------------------------------------------------------------
     void
-    MessageHandlerBase::
+    MessageHandler::
     writeBuffer( void* pBuffer ) const
     {
         messageItemList_.write(pBuffer);
@@ -47,7 +68,7 @@ namespace mpi
 
  //------------------------------------------------------------------------------------------------
     void
-    MessageHandlerBase::
+    MessageHandler::
     readBuffer( void* pBuffer ) const
     {
         messageItemList_.read(pBuffer);

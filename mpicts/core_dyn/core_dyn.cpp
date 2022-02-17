@@ -10,28 +10,65 @@
 
 namespace py = pybind11;
 
-#include "ParticleContainer.cpp"
-using namespace mpacts;
+//#include "ParticleContainer.cpp"
+//using namespace mpacts;
 
 #include "mpicts.cpp"
-#include "MessageItemList.cpp"
-#include "MessageHandler.cpp"
 #include "MessageBuffer.cpp"
-#include "MessageSet.cpp"
-#include "Transmitter.cpp"
+#include "MessageItemList.cpp"
+#include "MessageHeader.cpp"
+#include "MessageHandler.cpp"
 
-namespace test7
-{// Non-contiguous approach
- //---------------------------------------------------------------------------------------------------------------------
-    bool test()
+using namespace mpi;
+
+namespace test
+{//---------------------------------------------------------------------------------------------------------------------
+    bool test_MessageBuffer()
     {
-        bool ok = false;
-        init();
-
-        std::cout<<::mpi::info<<" done"<<std::endl;
-        finalize();
-        return ok;
+        Buffer b(10);
+        std::cout<<b.info("b")<<std::endl;
+        {
+            SharedBuffer sb(&b);
+            std::cout<<sb.info("sb")<<std::endl;
+            SharedBuffer sb2;
+            sb2 = sb;
+            std::cout<<sb.info("sb")<<std::endl;
+            std::cout<<sb2.info("sb2")<<std::endl;
+        }
+        std::cout<<b.info("b final")<<std::endl;
+        return true;
     }
+
+ //---------------------------------------------------------------------------------------------------------------------
+    bool test_MessageBufferPool()
+    {
+        MessageBufferPool pool;
+        pool.info();
+        {
+            SharedBuffer sb0 = pool.getBuffer(10);
+            sb0.info();
+            pool.info();
+            SharedBuffer sb1 = pool.getBuffer(20);
+            sb1.info();
+            pool.info();
+        }
+        pool.info();
+        return true;
+    }
+
+ //---------------------------------------------------------------------------------------------------------------------
+    bool test_MessageHeader()
+    {
+        MessageHeader mh0(0,2,3,4);
+        mh0.info();
+        MessageHeader::theHeadersInfo();
+//        MessageHeader::theHeaders[0].info("1");
+//        MessageHeader mh1(0,1,2,3);
+//        MessageHeader::theHeaders[0].info("1");
+
+        return true;
+    }
+ //---------------------------------------------------------------------------------------------------------------------
 }
 
 PYBIND11_MODULE(core_dyn, m)
@@ -39,5 +76,7 @@ PYBIND11_MODULE(core_dyn, m)
     m.doc() = "pybind11 core_dyn plugin"; // optional module docstring
  // list the functions you want to expose:
  // m.def("exposed_name", function_pointer, "doc-string for the exposed function");
-    m.def("test7", &test7::test, "");
+    m.def("test_MessageBuffer"    , &test::test_MessageBuffer, "");
+    m.def("test_MessageBufferPool", &test::test_MessageBufferPool, "");
+    m.def("test_MessageHeader"    , &test::test_MessageHeader, "");
 }

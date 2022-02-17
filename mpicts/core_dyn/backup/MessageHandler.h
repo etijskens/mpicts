@@ -3,7 +3,8 @@
 
 
 #include "mpicts.h"
-#include "Message.h"
+#include "MessageItemList.h"
+#include "ExtraMessageData.h"
 
 #include <map>
 
@@ -28,9 +29,18 @@ namespace mpi
             return *registry_[key];
         }
 
+        template<typename MessageHandler, class... Args>
+        MessageHandler&
+        create()
+        {
+            MessageHandler* pMessageHandler = new MessageHandler(Args...);
+            registerMessageHandler(pMessageHandler);
+            return *pMessageHandler;
+        }
+
     private:
         size_t counter_;
-        std::map<key_type,MessageHandlerBase*> registry_;
+        std::map<key_type, MessageHandlerBase*> registry_;
     };
 
  // A global MessageHandlerRegistry
@@ -39,58 +49,52 @@ namespace mpi
     extern MessageHandlerRegistry theMessageHandlerRegistry;
 
  //------------------------------------------------------------------------------------------------
-   class MessageHandlerBase
+    class MessageHandlerBase
  // Base class for message handlers
  //------------------------------------------------------------------------------------------------
-   {
-       friend class MessageHandlerRegistry;
-    protected:
-       static bool const _debug_ = true;
-    public:
-        typedef MessageHandlerRegistry::key_type key_type;
+    {
+        friend class MessageHandlerRegistry;
 
-     // the MessageHandler typically lives as long as a simulation. It is practical to store a
-     // reference to it.
-        MessageHandlerBase();
+        static bool const _debug_ = true;
+    protected: // data
+        MessageHandlerRegistry::key_type key_; // Identification key of the MessageHandler in the registry.
+        std::shared_ptr<MessageItemList> pMessageItemList_;
+        MessageBuffer  messageBuffer_;  //
+        MessageHeader* pMessageHeader_; // to access message header properties from the message body.
+         // Note that pMessageHeader_ points to an entry in the MessageSet's messageHeaders std::vector.
+
+        MessageHandlerBase() // default ctor protected
+          : pMessageItemList_(new MessageItemList)
+        {}
+
+    public:
+        static void createNew
+        MessageHandlerBase(MessageHandlerBase& mh) // copy ctor
+          : pMessageItemList_(mh.MessageItemList)
+        {}
+
         virtual ~MessageHandlerBase();
 
-     // Post the message in the messageBuffer
-     //     message -> messageBuffer
-        Index_t // message id of the message written. Occasionally useful.
-        writeMessage
-          ( int for_rank // destination of the message (some MPI rank).
-          );
-
-     // Read a message in the messageBuffer, i.e. the inverse of postMessagge().
-     //     message <- messageBuffer
-     // Reading the message is generally the responsability of the messageBuffer, which
-     //  - first retrieves the MessageHandlerKey from a message header
-     //  - then looks up the corresponding MessageHandler in theMessageHandlerRegistry
-     //  - finally delegates the work to MessageHandler::readMessage()
-     // Returns true if the MessageHandlerKey value in the message header
-     // with id msg_id corresponds to this->key_, false otherwise.
-     // in which case the message was not written by this
-     // MessageHandler, and therefore also cannot be read by it.
-        virtual
-        bool               // succes indicator
-        readMessage
-          ( Index_t msg_id // the message id identifies the message header
-          );
-
-//        virtual
-//        bool
-//        readMessage
-//          ( Index_t msg_id // the message id identifies the message header
-//          , Indices_t indices
-//          );
-
      // data member access
-        inline Message& message() { return message_; }
-        inline key_type key() const { return key_; }
+        inline MessageItemList& messageItemList() { return *messageItemList_; }
+        inline MessageHandlerRegistry::key_type key() const { return key_; }
 
-    protected:
-        Message message_;
-        key_type key_;
+        void addMessage(int destination);
+
+     // Member functions for MessageBuffer manipulation
+        size_t // buffer size in number of bytes.
+        computeBufferSize();
+
+        void
+        writeBuffer       // Write the message in the messageBuffer
+          ( void* pBuffer // pointer to buffer which is assumed large enough
+          ) const;
+
+        void
+        readBuffer       // Write the message in the messageBuffer
+          ( void* pBuffer // pointer to buffer which is assumed large enough
+          ) const;
+
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

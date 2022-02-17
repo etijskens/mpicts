@@ -15,8 +15,18 @@ namespace mpi
 
     void
     Transmitter::
+    addMessage(MessageHandlerBase& messageHandler, int destination, OptionalMessageData const* md)
+    {
+        MessageSet& myMessages = processMessages_[mpi::rank];
+
+    }
+
+
+    void
+    Transmitter::
     transmit()
     {
+        computeBufferSizes_();
         sendHeaders_();
         encodeMessages_();
         sendMessages_();
@@ -26,15 +36,14 @@ namespace mpi
 
     void
     Transmitter::
-    encodeMessages_()
+    computeBufferSizes_()
     {
         MessageSet& thisRanksMessages = processMessages_[mpi::rank];
         for ( MessageSet::iterator iter = thisRanksMessages.begin()
             ; iter != thisRanksMessages.end()
             ; ++iter )
         {
-            iter->adjustBuffer();
-            iter->writeBuffer();
+            iter->computeBufferSize();
         }
     }
 
@@ -71,19 +80,33 @@ namespace mpi
      // Also note that we do NOT want to send the first entry of the buffer as this contains the number
      // of messages in the header.
         for( int source = 0; source < mpi::size; ++source ) {
-//            MPI_Bcast
-//            ( processMessages_[source].pHeaders()
-//            , processMessages_[source].size() * sizeof(MessageHeader) // # of bytes
-//            , MPI_CHAR
-//            , source
-//            , MPI_COMM_WORLD
-//            );
+            MPI_Bcast
+            ( processMessages_[source].pHeaders()
+            , processMessages_[source].size() * sizeof(MessageHeader) // # of bytes
+            , MPI_CHAR
+            , source
+            , MPI_COMM_WORLD
+            );
         }
 
 //        if constexpr(::mpi::_debug_ && _debug_)
 //        {// print the headers:
 //            prdbg("MessageBuffer::broadcast() : headers transferred:", headersToStr());
 //        }
+    }
+
+    void
+    Transmitter::
+    encodeMessages_()
+    {
+        MessageSet& thisRanksMessages = processMessages_[mpi::rank];
+        for ( MessageSet::iterator iter = thisRanksMessages.begin()
+            ; iter != thisRanksMessages.end()
+            ; ++iter )
+        {
+            iter->adjustBuffer();
+            iter->writeBuffer();
+        }
     }
 
     void
@@ -153,5 +176,7 @@ namespace mpi
             }
         }
     }
+ //-------------------------------------------------------------------------------------------------
+    Transmitter theTransmitter;
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

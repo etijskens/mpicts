@@ -68,3 +68,39 @@ on all the reading processes (=receiving). The easiest way to fix this is to
 create all `MessageHandler` objects on all ranks in the same order, so that 
 the order of creation is a unique identifier for the `MessageHandler` across all
 MPI processes.
+
+### Trouble...
+
+Consider a system with 1 ParticleContainer distributed over 2x2x2 domains 
+each treated by a different MPI process. Every domain has 7 neighbours. 
+
+1. Do we create a MessageHandler for each message? Then how do we know how 
+   many MessageHandlers must be created at the receiving end. The number is 
+   obviously not constant. Non-nearest neighbours may be sending as well, so
+   this could be exploding... 
+
+2. Do we create one single MessageHandler for the PC handling 7 different 
+   messages? If so, where do we store the message specific information, c.q. 
+   the list of indices of the selected particles? How do we provide the 
+   MessageHandler with this list at the appropriate moment? The list is  
+   necessary for determining the buffer size which must go into the header
+   before it the headers are sent.
+
+I don't see a way of making the first approach work, so we are stuck with
+approach 2.
+
+Currently, a message is created by calling 
+
+    MessageSet::addMessage(destination,messageHandler);
+
+Instead, we could use something like
+    
+    PcMessageHandler::addMessage(destination, particleSelection);
+
+and make sure that the message created has some way to store the selection, 
+and pass it to 
+
+    PcMessageHandler::computeBufferSize();
+
+This could be a solution: add to MessageSet another std::vector of void pointers 
+which the messageHandler manages and knows how to cast to the extra date  
