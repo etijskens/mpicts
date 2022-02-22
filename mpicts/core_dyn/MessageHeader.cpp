@@ -59,13 +59,10 @@ namespace mpi
     INFO_DEF(MessageHeaderContainer)
     {
         std::stringstream ss;
-        ss<<indent<<"MessageHeaderContainer::info("<<title<<") : "
-          <<indent<<"  ( nBytesPerHeader="<<nBytesPerHeader
-                  <<  ", sizeof(MessageHeaderData)="<<sizeof(MessageHeaderData)
-                  <<" ) ";
+        ss<<indent<<"MessageHeaderContainer::info("<<title<<") :";
         if(headers_.size()) {
             for( size_t i=0; i < headers_.size(); ++i ){
-                ss<<headers_[i].info( indent + "  ", std::string("i=") + std::to_string(i) );
+                ss<<headers_[i].info( indent + "  ", tostr("header ", i, " of ", headers_.size()) );
             }
         } else {
             ss<<indent<<"  ( empty )";
@@ -128,11 +125,13 @@ namespace mpi
     STATIC_INFO_DEF(MessageHeader)
     {
         std::stringstream ss;
-        ss<<indent<<"MessageHeader::static_info("<<title<<") : ";
+        ss<<indent<<"MessageHeader::static_info("<<title<<") :"
+          <<indent<<"  ( nBytesPerHeader="<<MessageHeaderContainer::nBytesPerHeader
+                  <<  ", sizeof(MessageHeaderData)="<<sizeof(MessageHeaderData)
+                  <<" ) ";
         if( theHeaders.size() ) {
-            ss<<"( size="<<theHeaders.size()<<" )";
             for( int rnk = 0; rnk < theHeaders.size(); ++rnk ) {
-                ss<<theHeaders[rnk].info( indent + "  ", std::string("rank=") + std::to_string(rnk) );
+                ss<<theHeaders[rnk].info( indent + "  ", tostr("rank ", rnk, " of ", theHeaders.size()) );
             }
         } else {
             ss<<"( empty )";
@@ -146,7 +145,7 @@ namespace mpi
         title_<<"rank="<<src_<<", indx="<<i_;
 
         std::stringstream ss;
-        ss<<theHeaders[src_][i_].info( indent + "  ", title_.str() );
+        ss<<theHeaders[src_][i_].info( indent, title_.str() );
 
         return ss.str();
     }

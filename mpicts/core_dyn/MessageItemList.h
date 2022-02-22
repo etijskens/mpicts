@@ -2,6 +2,7 @@
 #define MESSAGE_H
 
 #include "memcpy_able.h"
+#include "MessageData.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -41,7 +42,7 @@ namespace mpi
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~", info(), "() : this=", this));
+                prdbg( tostr("\n~MessageItem<T=", typeid(T).name(), ">() : this=", this) );
             }
         }
 
@@ -65,14 +66,17 @@ namespace mpi
         }
 
      // Compute the size (in bytes) that *ptrT_ will occupy in a message.
-        virtual size_t computeItemBufferSize() const {
+        virtual size_t computeItemBufferSize
+          (
+          ) const
+        {
             return ::mpi::computeItemBufferSize(*ptrT_);
         }
 
         virtual INFO_DECL
         {
             std::stringstream ss;
-            ss<<indent<<"MessageItem<T="<<typeid(T).name()<<">";
+            ss<<indent<<"MessageItem("<<title<<")<T="<<typeid(T).name()<<">";
             return ss.str();
         }
     };
@@ -126,7 +130,10 @@ namespace mpi
         void read (void*& ptr);
 
      // Compute the number of bytes the message occupies in a MessageBuffer.
-        size_t computeMessageBufferSize() const;
+        size_t
+        computeMessageBufferSize
+          ( MessageData* pMessageData
+          ) const;
 
         INFO_DECL;
     };

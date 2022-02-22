@@ -45,7 +45,9 @@ namespace mpi
 
     size_t // the number of bytes the mesage occupies in the MessageBuffer
     MessageItemList::
-    computeMessageBufferSize() const
+    computeMessageBufferSize
+      ( MessageData* pMessageData
+      ) const
     {
         size_t sz = 0;
         for( auto pItem : list_) {
@@ -57,9 +59,10 @@ namespace mpi
     INFO_DEF(MessageItemList)
     {
         std::stringstream ss;
-        ss<<indent<<"MessageItemList.info("<<title<<")";
+        ss<<indent<<"MessageItemList.info("<<title<<") :";
+        std::size_t counter = 0;
         for( auto pItem : list_) {
-            ss<<pItem->info( indent + "  " );
+            ss<<pItem->info( indent + "  ", std::to_string(counter++) );
         }
         return ss.str();
     }

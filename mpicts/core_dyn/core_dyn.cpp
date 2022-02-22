@@ -14,6 +14,7 @@ namespace py = pybind11;
 //using namespace mpacts;
 
 #include "mpicts.cpp"
+#include "MessageData.cpp"
 #include "MessageBuffer.cpp"
 #include "MessageItemList.cpp"
 #include "MessageHeader.cpp"
@@ -30,9 +31,9 @@ namespace test
         Buffer b(10);
         std::cout<<b.info("b")<<std::endl;
         {
-            SharedBuffer sb(&b);
+            MessageBuffer sb(&b);
             std::cout<<sb.info("sb")<<std::endl;
-            SharedBuffer sb2;
+            MessageBuffer sb2;
             sb2 = sb;
             std::cout<<sb.info("sb")<<std::endl;
             std::cout<<sb2.info("sb2")<<std::endl;
@@ -46,17 +47,15 @@ namespace test
     {
         std::cout<<"-*# test_MessageBufferPool() #*-"<<std::endl;
 
-        MessageBufferPool pool;
-        std::cout<<pool.info()<<std::endl;
         {
-            SharedBuffer sb0 = pool.getBuffer(10);
+            MessageBuffer sb0 = Buffer::getBuffer(10);
             std::cout<<sb0.info()<<std::endl;
-            std::cout<<pool.info()<<std::endl;
-            SharedBuffer sb1 = pool.getBuffer(20);
+            std::cout<<Buffer::static_info()<<std::endl;
+            MessageBuffer sb1 = Buffer::getBuffer(20);
             std::cout<<sb1.info()<<std::endl;
-            std::cout<<pool.info()<<std::endl;
+            std::cout<<Buffer::static_info()<<std::endl;
         }
-        std::cout<<pool.info()<<std::endl;
+        std::cout<<Buffer::static_info()<<std::endl;
         return true;
     }
 
@@ -86,13 +85,15 @@ namespace test
                                                 // --------------------
                                                 //             32 bytes
             MessageHandler hndlr;
-            prdbg(hndlr.static_info());
+            prdbg(MessageHandler::static_info());
             hndlr.messageItemList().push_back(a);
             hndlr.messageItemList().push_back(ints);
-            prdbg(hndlr.static_info());
-            prdbg(tostr("{a,ints} messageBufferSize = ", hndlr.computeMessageBufferSize()));
+            prdbg(MessageHandler::static_info());
+//            prdbg(tostr("{a,ints} messageBufferSize = ", hndlr.computeMessageBufferSize()));
+            hndlr.addMessage(0);
             hndlr.addMessage(0);
             prdbg(MessageHeader::static_info());
+            prdbg(hndlr.info());
         }
         finalize();
         return true;

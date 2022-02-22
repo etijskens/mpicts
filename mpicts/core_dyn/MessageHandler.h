@@ -4,7 +4,7 @@
 
 #include "mpicts.h"
 #include "MessageItemList.h"
-#include "MessageBuffer.h"
+#include "MessageData.h"
 
 #include <map>
 
@@ -48,42 +48,18 @@ namespace mpi
     public:
         using key_type = MessageHandlerRegistry::key_type;
         static MessageHandlerRegistry theMessageHandlerRegistry;
-        static MessageBufferPool      theMessageBufferPool;
     private:
         friend class MessageHandlerRegistry;
 
         static bool const _debug_ = true;
 
     protected: // member class
-        class MessageData
-         // Base struct for message data.
-         // Typically, a derived MessageHandler will have its own derived MessageData with additional
-         // message data. As the derived MessageHandler knows the derived MessageData_Base type is can
-         // use dynamic_cast to cast from  MessageData_Base
-         //------------------------------------------------------------------------------------------------
-        {
-            MessageHeader messageHeader_;
-            SharedBuffer  messageBuffer_;
-        public:
-            MessageData
-              ( int src                 // MPI source rank
-              , int dst                 // MPI source rank
-              , MessageHandlerKey_t key //
-              )
-              : messageHeader_(src,dst,key)
-            {// messageBuffer_ remains empty, sofar.
-            }
-
-            void getBuffer(size_t nBytes) { messageBuffer_ = theMessageBufferPool.getBuffer(nBytes); }
-
-            INFO_DECL;
-        };
 
     private: // data
-        std::vector<MessageData*> messageDataList_;
+        std::vector<MessageData*> messageDataList_; // one entry for each message using this MessageHandler's messageItemList_
 
     protected: // data
-        mutable MessageItemList messageItemList_;
+        mutable MessageItemList messageItemList_; // the entries reference the objects from which the message is composed
         key_type key_; // Identification key of the MessageHandler in the registry.
 
     public:
@@ -97,25 +73,34 @@ namespace mpi
 
         inline MessageHandlerRegistry::key_type key() const { return key_; }
 
-        void addMessage(int destination);
-
-     // Member functions for MessageBuffer manipulation
-
-        size_t // number of bytes.
-        computeMessageBufferSize(); // Compute the size (bytes) that a message will occupy when written to a buffer
-
-        void
-        writeBuffer       // Write the message in the messageBuffer
-          ( void* pBuffer // pointer to buffer
-          ) const;
-
-        void
-        readBuffer       // Write the message in the messageBuffer
-          ( void* pBuffer // pointer to buffer
-          ) const;
-
         INFO_DECL;
         STATIC_INFO_DECL;
+
+     // High level member functions for MessageBuffer manipulation
+        void addMessage(int destination);
+
+        inline size_t nMessages() const { return messageDataList_.size(); }
+
+        void postMessages();     // Allocate buffers and write the messages to their buffers.
+        void transferMessages(); // Send and receive the messages
+        void readMessages();     // Read the messages from the receive buffers
+
+    protected:
+     // Low level member functions for MessageBuffer manipulation
+//        size_t                   // number of bytes the message needs
+//        computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
+//          ( size_t i             // index of the message in messageDataList_
+//          );
+//
+//        void
+//        writeBuffer   // Write the i-th message to its messageBuffer. The buffer is automatically adjusted.
+//          ( size_t i  // index of the message in messageDataList_
+//          );
+//
+//        void
+//        readBuffer    // Read the i-th message from the messageBuffer. The buffer is automatically adjusted.
+//          ( size_t i  // index of the message in messageDataList_
+//          );
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

@@ -6,6 +6,31 @@ namespace mpi
 {//------------------------------------------------------------------------------------------------
  // Implementation of class Buffer
  //-------------------------------------------------------------------------------------------------
+    std::vector<Buffer> Buffer::theMessageBufferPool;
+
+    MessageBuffer
+    Buffer::
+    getBuffer(size_t nBytes)
+    {
+        auto iter = theMessageBufferPool.begin();
+        for( ; iter != theMessageBufferPool.end(); ++iter )
+        {
+            if( iter->useCount_ > 0 )
+                continue;
+            if( iter->size() >= nBytes )
+                break;
+        }
+        Buffer* pBuffer = nullptr;
+        if( iter == theMessageBufferPool.end() )
+        {// no large enough buffer available. Create one:
+            theMessageBufferPool.push_back( Buffer(nBytes) );
+            pBuffer = &theMessageBufferPool.back();
+        } else {
+            pBuffer = &(*iter);
+        }
+        return MessageBuffer(pBuffer);
+    }
+
     INFO_DEF(Buffer)
     {
         std::stringstream ss;
@@ -15,14 +40,27 @@ namespace mpi
                                            <<" )";
         return ss.str();
     }
-
- //-------------------------------------------------------------------------------------------------
- // Implementation of class SharedBuffer
- //-------------------------------------------------------------------------------------------------
-    INFO_DEF(SharedBuffer)
+    
+    STATIC_INFO_DEF(Buffer)
     {
         std::stringstream ss;
-        ss<<indent<<"SharedBuffer.info("<<title<<") : ( ";
+        ss<<indent<<"theMessageBufferPool.info("<<title<<") :";
+        if( theMessageBufferPool.size() ) {
+            for( size_t i=0; i < theMessageBufferPool.size(); ++i ) {
+               ss<<theMessageBufferPool[i].info( indent + "  ", tostr("i=", i, "/", theMessageBufferPool.size()) );
+            }
+        } else {
+            ss<<indent<<"  ( empty )";
+        }
+        return ss.str();
+    }
+ //-------------------------------------------------------------------------------------------------
+ // Implementation of class MessageBuffer
+ //-------------------------------------------------------------------------------------------------
+    INFO_DEF(MessageBuffer)
+    {
+        std::stringstream ss;
+        ss<<indent<<"MessageBuffer.info("<<title<<") : ( ";
         if(pBuffer_) {
           ss<<  "ptr="<<(void*)(pBuffer_->pBytes_) // cast needed to avoid interpreting char* as string
             <<", size="<<       pBuffer_->size()
@@ -32,48 +70,6 @@ namespace mpi
           ss<<"empty";
         }
         ss<<" )";
-        return ss.str();
-    }
-
- //-------------------------------------------------------------------------------------------------
- // Implementation of class MessageBufferPool
- //-------------------------------------------------------------------------------------------------
-    SharedBuffer
-    MessageBufferPool::
-    getBuffer(size_t nBytes)
-    {
-        auto iter = pool_.begin();
-        for( ; iter != pool_.end(); ++iter )
-        {
-            if( iter->useCount_ > 0 )
-                continue;
-            if( iter->size() >= nBytes )
-                break;
-        }
-        Buffer* pBuffer = nullptr;
-        if( iter == pool_.end() )
-        {// no large enough buffer available. Create one:
-            pool_.push_back( Buffer(nBytes) );
-            pBuffer = &pool_.back();
-        } else {
-            pBuffer = &(*iter);
-        }
-        return SharedBuffer(pBuffer);
-    }
-
- //-------------------------------------------------------------------------------------------------
-    INFO_DEF(MessageBufferPool)
-    {
-        std::stringstream ss;
-        ss<<indent<<"MessageBufferPool.info("<<title<<"): ( ";
-        if( pool_.size() ) {
-            ss<<"size="<<pool_.size()<<" )";
-            for( size_t i=0; i < pool_.size(); ++i ) {
-               ss<<pool_[i].info(indent + "  ", std::string("i=") + std::to_string(i));
-            }
-        } else {
-            ss <<"empty )";
-        }
         return ss.str();
     }
 

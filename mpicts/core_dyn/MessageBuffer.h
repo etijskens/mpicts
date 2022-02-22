@@ -1,37 +1,52 @@
 #ifndef MESSAGEBUFFER_H
 #define MESSAGEBUFFER_H
 
+#include "mpicts.h"
+
 #include <vector>
 
 namespace mpi
 {//------------------------------------------------------------------------------------------------
  // padBytes function
  //------------------------------------------------------------------------------------------------
-    template
-      < size_t WordSize // Pad the nBytes parameter to the next WordSize boundary
-      , size_t Unit=1   // Express the result as a multiple of Unit bytes (Unit must be a divisor of WordSize).
-      >
-    size_t              // the result
-    padBytes            // padBytes<8>(5)   -> 8 : the next 8 byte boundary of 5 (bytes) is 8 (bytes)
-                        // padBytes<8,4>(5) -> 2 : the next 8 byte boundary of 5 (bytes) is 2 4-byte words (= 8 bytes)
-                        // padBytes<8,2>(5) -> 8 : the next 8 byte boundary of 5 (bytes) is 1 8-byte word (= 8 bytes)
-      ( size_t nBytes   // the number of bytes to be padded.
-      )
-    {
-        static_assert(WordSize % Unit == 0); // Unit must be a divisor of WordSize.
-        return ((nBytes + WordSize - 1) / WordSize) * (WordSize / Unit);
-    }
+//    template
+//      < size_t WordSize // Pad the nBytes parameter to the next WordSize boundary
+//      , size_t Unit=1   // Express the result as a multiple of Unit bytes (Unit must be a divisor of WordSize).
+//      >
+//    size_t              // the result
+//    padBytes            // padBytes<8>(5)   -> 8 : the next 8 byte boundary of 5 (bytes) is 8 (bytes)
+//                        // padBytes<8,4>(5) -> 2 : the next 8 byte boundary of 5 (bytes) is 2 4-byte words (= 8 bytes)
+//                        // padBytes<8,2>(5) -> 8 : the next 8 byte boundary of 5 (bytes) is 1 8-byte word (= 8 bytes)
+//      ( size_t nBytes   // the number of bytes to be padded.
+//      )
+//    {
+//        static_assert(WordSize % Unit == 0); // Unit must be a divisor of WordSize.
+//        return ((nBytes + WordSize - 1) / WordSize) * (WordSize / Unit);
+//    }
 
-//------------------------------------------------------------------------------------------------
+    class MessageBuffer;
+
+ //------------------------------------------------------------------------------------------------
     class Buffer
  //------------------------------------------------------------------------------------------------
     {
-        friend class SharedBuffer;
-        friend class MessageBufferPool;
+        friend class MessageBuffer;
+
     private:
         size_t nBytes_; // number of words (Word_t) allocated.
         char*  pBytes_; // pointer to the buffer
         unsigned int useCount_;
+
+    public:
+        static std::vector<Buffer> theMessageBufferPool;
+
+        static
+        MessageBuffer
+        getBuffer       // Get a buffer from the pool, allocate if necessary
+          ( size_t size // the minimum size of the buffer in bytes
+          );
+
+        STATIC_INFO_DECL;
 
     public:
         Buffer(size_t nBytes)
@@ -71,23 +86,23 @@ namespace mpi
     };
 
  //------------------------------------------------------------------------------------------------
-    class SharedBuffer
+    class MessageBuffer
  //------------------------------------------------------------------------------------------------
     {
         Buffer* pBuffer_;
     public:
-        SharedBuffer()
+        MessageBuffer()
           : pBuffer_( nullptr )
         {}
 
-        SharedBuffer(Buffer* pBuffer)
+        MessageBuffer(Buffer* pBuffer)
           : pBuffer_( pBuffer )
         {
             ++(pBuffer_->useCount_);
         }
 
      // Copy assignment moves the Buffer* from the rhs to *this (transferring ownership)
-        SharedBuffer& operator=(const SharedBuffer& rhs)
+        MessageBuffer& operator=(const MessageBuffer& rhs)
         {
             std::cout<<"coucou"<<std::endl;
             if (this == &rhs) return *this; // Guard self assignment
@@ -95,13 +110,13 @@ namespace mpi
          // forget the current pBuffer_ (if any) and move the one from the rhs to *this
             if( pBuffer_ ) --(pBuffer_->useCount_);
             pBuffer_ = rhs.pBuffer_;
-            SharedBuffer& non_const_rhs = const_cast<SharedBuffer&>(rhs);
+            MessageBuffer& non_const_rhs = const_cast<MessageBuffer&>(rhs);
             non_const_rhs.pBuffer_ = nullptr;
 
             return *this;
         }
 
-        ~SharedBuffer()
+        ~MessageBuffer()
         {
             if( pBuffer_ )
                 --pBuffer_->useCount_;
@@ -112,21 +127,6 @@ namespace mpi
         INFO_DECL;
     };
 
- //------------------------------------------------------------------------------------------------
-    class MessageBufferPool
- //-------------------------------------------------------------------------------------------------
-    {
-    private: // data members
-        std::vector<Buffer> pool_;
-
-    public:
-        SharedBuffer
-        getBuffer       // Get a buffer from the pool
-          ( size_t size // the minimum size of the buffer in bytes
-          );
-
-        INFO_DECL;
-    };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi
 

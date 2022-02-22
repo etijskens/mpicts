@@ -37,7 +37,6 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     MessageHandlerRegistry MessageHandler::theMessageHandlerRegistry;
 
-    MessageBufferPool      MessageHandler::theMessageBufferPool;
 
     MessageHandler::
     MessageHandler()
@@ -62,8 +61,8 @@ namespace mpi
             }
         }
     }
- //------------------------------------------------------------------------------------------------
 
+ //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
     addMessage(int destination)
@@ -77,45 +76,78 @@ namespace mpi
     }
 
  //------------------------------------------------------------------------------------------------
-
-    size_t // buffer size in number of bytes.
+    void
     MessageHandler::
-    computeMessageBufferSize()
+    postMessages() // Allocate buffers and write the messages to their buffers.
     {
-        return messageItemList_.computeMessageBufferSize();
     }
 
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    writeBuffer( void* pBuffer ) const
+    transferMessages() // Send and receive the messages
     {
-        messageItemList_.write(pBuffer);
     }
 
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    readBuffer( void* pBuffer ) const
+    readMessages() // Read the messages from the receive buffers
     {
-        messageItemList_.read(pBuffer);
     }
 
+ //------------------------------------------------------------------------------------------------
+//    size_t                   // number of bytes the message needs
+//    MessageHandler::
+//    computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
+//      ( size_t i             // index of the message in messageDataList_
+//      )
+//    {
+//        return messageItemList_.computeMessageBufferSize(messageDataList_[i]);
+//    }
+//
+// //------------------------------------------------------------------------------------------------
+//    void
+//    MessageHandler::
+//    writeBuffer
+//    {
+//        messageItemList_.write(pBuffer);
+//    }
+//
+// //------------------------------------------------------------------------------------------------
+//    void
+//    MessageHandler::
+//    readBuffer( void* pBuffer ) const
+//    {
+//        messageItemList_.read(pBuffer);
+//    }
+
+ //------------------------------------------------------------------------------------------------
+ //------------------------------------------------------------------------------------------------
     INFO_DEF(MessageHandler)
     {
         std::stringstream ss;
-        ss<<indent<<"MessageHandler.info("<<title<<") : { key='"<<key_<<"':"
-          <<messageItemList().info(indent + "  ")
-          <<indent<<'}';
+        std::string t = title;
+        if( !t.empty() ) t += ", ";
+        t += tostr("key=", key_);
+        ss<<indent<<"MessageHandler.info("<<t<<") :"
+                  <<messageItemList().info(indent + "  ")
+          <<indent<<"  messageDataList_ :"
+          ;
+
+        for( size_t m = 0; m < messageDataList_.size(); ++m ) {
+            ss<<messageDataList_[m]->info(indent + "    ", tostr("message ", m, " of ",messageDataList_.size()));
+        }
         return ss.str();
     }
 
+ //------------------------------------------------------------------------------------------------
     STATIC_INFO_DEF(MessageHandler)
     {
         std::stringstream ss;
-        ss<<"\nMessageHandler::static_info("<<title<<"):"
+        ss<<"\nMessageHandler::static_info("<<title<<") :"
           <<theMessageHandlerRegistry.info(indent + "  ")
-          <<theMessageBufferPool     .info(indent + "  ")
+          <<Buffer::static_info(indent + "  ")
           ;
 
         return ss.str();

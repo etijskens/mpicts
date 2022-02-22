@@ -2,7 +2,9 @@
 #define MESSAGEHEADER_H
 
 #include <vector>
+
 #include "mpicts.h"
+
 #define INVALID -1
 
 namespace mpi
