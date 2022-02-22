@@ -2,6 +2,20 @@
 
 namespace mpi
 {//------------------------------------------------------------------------------------------------
+ // implementation of class MessageHeaderData
+ //------------------------------------------------------------------------------------------------
+    INFO_DEF(MessageHeaderData)
+    {
+        std::stringstream ss;
+        ss<<indent<<"MessageHeaderData.info("<<title<<") : ( source="     <<source
+                                                        <<", destination="<<destination
+                                                        <<", key="        <<key
+                                                        <<", size="       <<size
+                                                        <<" )";
+        return ss.str();
+    };
+
+ //------------------------------------------------------------------------------------------------
  // implementation of class MessageHeaderContainer
  //------------------------------------------------------------------------------------------------
     size_t MessageHeaderContainer::nBytesPerHeader = 0;
@@ -42,21 +56,20 @@ namespace mpi
         }
     }
 
-    std::string
-    MessageHeaderContainer::
-    info( std::string const& s ) const
+    INFO_DEF(MessageHeaderContainer)
     {
         std::stringstream ss;
-        ss  <<  "MessageHeaderContainer::info("<<s<<")"
-            <<"\n    nBytesPerHeader           : "<<nBytesPerHeader
-            <<"\n    sizeof(MessageHeaderData) : "<<sizeof(MessageHeaderData)
-            <<"\n    size                      : "<<headers_.size()
-            ;
-        for( size_t i=0; i < headers_.size(); ++i ){
-            MessageHeaderData const h = headers_[i];
-            ss<<"\n    "<<i<<" { src="<<h.source<<", dst="<<h.destination<<", key="<<h.key<<", size="<<h.size<<" }";
+        ss<<indent<<"MessageHeaderContainer::info("<<title<<") : "
+          <<indent<<"  ( nBytesPerHeader="<<nBytesPerHeader
+                  <<  ", sizeof(MessageHeaderData)="<<sizeof(MessageHeaderData)
+                  <<" ) ";
+        if(headers_.size()) {
+            for( size_t i=0; i < headers_.size(); ++i ){
+                ss<<headers_[i].info( indent + "  ", std::string("i=") + std::to_string(i) );
+            }
+        } else {
+            ss<<indent<<"  ( empty )";
         }
-        ss<<std::endl;
         return ss.str();
     }
 
@@ -112,33 +125,29 @@ namespace mpi
         i_ = theHeaders[src_].addHeader();
     }
 
-    std::string
-    MessageHeader::
-    theHeadersInfo( std::string const& s )
+    STATIC_INFO_DEF(MessageHeader)
     {
         std::stringstream ss;
-        ss  <<"All MessageHeaderContainers: size="<<theHeaders.size() ;
-        for( int rnk = 0; rnk < theHeaders.size(); ++rnk )
-        {
-            ss<<"\nMPI rank "<<rnk<<": "
-              <<theHeaders[rnk].info();
+        ss<<indent<<"MessageHeader::static_info("<<title<<") : ";
+        if( theHeaders.size() ) {
+            ss<<"( size="<<theHeaders.size()<<" )";
+            for( int rnk = 0; rnk < theHeaders.size(); ++rnk ) {
+                ss<<theHeaders[rnk].info( indent + "  ", std::string("rank=") + std::to_string(rnk) );
+            }
+        } else {
+            ss<<"( empty )";
         }
-        ss<<std::endl;
         return ss.str();
     }
 
-    std::string
-    MessageHeader::
-    info( std::string const& s ) const
+    INFO_DEF(MessageHeader)
     {
+        std::stringstream title_;
+        title_<<"rank="<<src_<<", indx="<<i_;
+
         std::stringstream ss;
-        MessageHeaderData const h = theHeaders[src_][i_];
-        ss
-        <<  "MessageHeader: "<<s
-        <<"\n    src :"<< src_
-        <<"\n    loc :"<< i_
-        <<"\n    { src="<<h.source<<", dst="<<h.destination<<", key="<<h.key<<", size="<<h.size<<" }"
-        <<std::endl;
+        ss<<theHeaders[src_][i_].info( indent + "  ", title_.str() );
+
         return ss.str();
     }
 

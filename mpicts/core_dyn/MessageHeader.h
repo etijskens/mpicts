@@ -2,6 +2,7 @@
 #define MESSAGEHEADER_H
 
 #include <vector>
+#include "mpicts.h"
 #define INVALID -1
 
 namespace mpi
@@ -22,6 +23,8 @@ namespace mpi
         bool isValid() const {
             return source != INVALID;
         }
+
+        INFO_DECL;
     };
 
  //------------------------------------------------------------------------------------------------
@@ -63,7 +66,7 @@ namespace mpi
             headers_.resize(nHeaders);
         }
 
-        std::string info( std::string const& s = std::string() ) const;
+        INFO_DECL;
 
     private:
         void computeNBytesPerHeader_();
@@ -83,7 +86,6 @@ namespace mpi
         static std::vector<MessageHeaderContainer> theHeaders;
          // One MessageHeaderContainer per MPI rank
 
-        static std::string theHeadersInfo( std::string const& s = std::string() );
 
     public:
         MessageHeader
@@ -108,7 +110,8 @@ namespace mpi
         size_t  size()             const { return theHeaders[src_][i_].size; }
         size_t& size()                   { return theHeaders[src_][i_].size; }
 
-        std::string info( std::string const& s = std::string() ) const;
+        INFO_DECL;
+        STATIC_INFO_DECL;
 
     private:
         void alloc_();

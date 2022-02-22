@@ -25,6 +25,8 @@ namespace test
 {//---------------------------------------------------------------------------------------------------------------------
     bool test_MessageBuffer()
     {
+        std::cout<<"-*# test_MessageBuffer() #*-"<<std::endl;
+
         Buffer b(10);
         std::cout<<b.info("b")<<std::endl;
         {
@@ -42,6 +44,8 @@ namespace test
  //---------------------------------------------------------------------------------------------------------------------
     bool test_MessageBufferPool()
     {
+        std::cout<<"-*# test_MessageBufferPool() #*-"<<std::endl;
+
         MessageBufferPool pool;
         std::cout<<pool.info()<<std::endl;
         {
@@ -59,13 +63,38 @@ namespace test
  //---------------------------------------------------------------------------------------------------------------------
     bool test_MessageHeader()
     {
+        std::cout<<"-*# test_MessageHeader() #*-"<<std::endl;
+
         MessageHeader mh0(0,2,3,4);
         std::cout<<mh0.info()<<std::endl;
-        std::cout<<MessageHeader::theHeadersInfo()<<std::endl;
-//        MessageHeader::theHeaders[0].info("1");
-//        MessageHeader mh1(0,1,2,3);
-//        MessageHeader::theHeaders[0].info("1");
+        std::cout<<MessageHeader::static_info("1")<<std::endl;
+        MessageHeader mh1(0,1,2,3);
+        std::cout<<MessageHeader::static_info("2")<<std::endl;
 
+        return true;
+    }
+
+ //---------------------------------------------------------------------------------------------------------------------
+    bool test_MessageHandler()
+    {
+        init();
+        prdbg("-*# test_MessageHandler() #*-");
+        {
+            double a = 5;                       //              8 bytes
+            std::vector<int> ints = {1,2,3,4};  // 4*4 bytes = 16 bytes
+                                                // size_t       8 bytes
+                                                // --------------------
+                                                //             32 bytes
+            MessageHandler hndlr;
+            prdbg(hndlr.static_info());
+            hndlr.messageItemList().push_back(a);
+            hndlr.messageItemList().push_back(ints);
+            prdbg(hndlr.static_info());
+            prdbg(tostr("{a,ints} messageBufferSize = ", hndlr.computeMessageBufferSize()));
+            hndlr.addMessage(0);
+            prdbg(MessageHeader::static_info());
+        }
+        finalize();
         return true;
     }
  //---------------------------------------------------------------------------------------------------------------------
@@ -79,4 +108,5 @@ PYBIND11_MODULE(core_dyn, m)
     m.def("test_MessageBuffer"    , &test::test_MessageBuffer, "");
     m.def("test_MessageBufferPool", &test::test_MessageBufferPool, "");
     m.def("test_MessageHeader"    , &test::test_MessageHeader, "");
+    m.def("test_MessageHandler"   , &test::test_MessageHandler, "");
 }

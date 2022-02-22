@@ -6,36 +6,32 @@ namespace mpi
 {//------------------------------------------------------------------------------------------------
  // Implementation of class Buffer
  //-------------------------------------------------------------------------------------------------
-    std::string
-    Buffer::
-    info( std::string const& s ) const
+    INFO_DEF(Buffer)
     {
         std::stringstream ss;
-        ss  <<  "Buffer      : "
-            <<"\n    raw ptr : "<< (void*) pBytes_ // cast needed to avoid interpreting char* as string
-            <<"\n    nBytes  : "<< size()
-            <<"\n    useCount: "<< useCount_
-            <<std::endl;
+        ss<<indent<<"Buffer.info("<<title<<") ( ptr="<<(void*) pBytes_ // cast needed to avoid interpreting char* as string
+                                           <<", nBytes="<< size()
+                                           <<", useCount="<< useCount_
+                                           <<" )";
         return ss.str();
     }
 
  //-------------------------------------------------------------------------------------------------
  // Implementation of class SharedBuffer
  //-------------------------------------------------------------------------------------------------
-    std::string
-    SharedBuffer::
-    info( std::string const& s ) const
+    INFO_DEF(SharedBuffer)
     {
         std::stringstream ss;
-        ss  <<  "SharedBuffer: "<<s;
+        ss<<indent<<"SharedBuffer.info("<<title<<") : ( ";
         if(pBuffer_) {
-        ss  <<"\n    raw ptr : "<< (void*)(pBuffer_->pBytes_) // cast needed to avoid interpreting char* as string
-            <<"\n    nBytes  : "<< pBuffer_->size()
-            <<"\n    useCount: "<< pBuffer_->useCount_;
+          ss<<  "ptr="<<(void*)(pBuffer_->pBytes_) // cast needed to avoid interpreting char* as string
+            <<", size="<<       pBuffer_->size()
+            <<", useCount="<<   pBuffer_->useCount_
+            ;
         } else {
-        ss  <<"\n    (empty)";
+          ss<<"empty";
         }
-        ss<<std::endl;
+        ss<<" )";
         return ss.str();
     }
 
@@ -66,20 +62,17 @@ namespace mpi
     }
 
  //-------------------------------------------------------------------------------------------------
-    std::string
-    MessageBufferPool::
-    info(std::string const& s) const
+    INFO_DEF(MessageBufferPool)
     {
         std::stringstream ss;
-        ss  <<"MessageBufferPool info: "<<s
-            <<"\n    size    : "<< pool_.size();
-        for( size_t i=0; i < pool_.size(); ++i )
-        {
-          ss<<"\n  pool["<<i<<"]"
-            <<"\n    raw ptr :"<< (void*)(pool_[i].pBytes_) // cast needed to avoid interpreting char* as string
-            <<"\n    nBytes  :"<< pool_[i].size()
-            <<"\n    useCount:"<< pool_[i].useCount_
-            <<std::endl;
+        ss<<indent<<"MessageBufferPool.info("<<title<<"): ( ";
+        if( pool_.size() ) {
+            ss<<"size="<<pool_.size()<<" )";
+            for( size_t i=0; i < pool_.size(); ++i ) {
+               ss<<pool_[i].info(indent + "  ", std::string("i=") + std::to_string(i));
+            }
+        } else {
+            ss <<"empty )";
         }
         return ss.str();
     }

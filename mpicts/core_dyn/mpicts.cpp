@@ -11,7 +11,7 @@ namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
     int rank = -1;
     int size = -1;
-    std::string info;
+    std::string INFO;
     std::string dbg_fname;
     int64_t timestamp0;
 
@@ -31,12 +31,10 @@ namespace mpi
         char processor_name[MPI_MAX_PROCESSOR_NAME];
         MPI_Get_processor_name(processor_name, &processor_name_size);
 
-     // initialize info
+     // initialize INFO
         std::stringstream ss;
         ss<<"MPI rank ["<<rank<<'/'<<size<<"] (name='"<<processor_name<<"'):";
-        info = ss.str();
-
-//        theMessageBuffer.initialize(buf_size, max_msgs);
+        INFO = ss.str();
 
      // initialize debug output file.
         if constexpr(_debug_)

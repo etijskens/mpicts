@@ -18,7 +18,9 @@ namespace mpi
     // read the message item from src
         virtual void read (void*& src)       = 0;
     // get the size of the message item (in bytes)
-        virtual size_t computeByteSize() const = 0;
+        virtual size_t computeItemBufferSize() const = 0;
+
+        virtual INFO_DECL = 0;
     };
 
  //-------------------------------------------------------------------------------------------------
@@ -39,7 +41,7 @@ namespace mpi
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~MessageItem<T=", typeid(T).name(), ">() : this=", this));
+                prdbg(tostr("~", info(), "() : this=", this));
             }
         }
 
@@ -47,7 +49,7 @@ namespace mpi
         virtual void write( void*& dst ) const
        {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<T=", typeid(T).name(), ">::write()") );
+                prdbg( tostr(info(), "::write()") );
             }
             ::mpi::write( *ptrT_, dst );
         }
@@ -58,13 +60,20 @@ namespace mpi
             ::mpi::read( *ptrT_, src );
 
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<T=", typeid(T).name(), ">::read()") );
+                prdbg( tostr(info(), "::read()") );
             }
         }
 
-     // Size that *ptrT_ will occupy in a message, in bytes
-        virtual size_t computeByteSize() const {
-            return ::mpi::computeByteSize(*ptrT_);
+     // Compute the size (in bytes) that *ptrT_ will occupy in a message.
+        virtual size_t computeItemBufferSize() const {
+            return ::mpi::computeItemBufferSize(*ptrT_);
+        }
+
+        virtual INFO_DECL
+        {
+            std::stringstream ss;
+            ss<<indent<<"MessageItem<T="<<typeid(T).name()<<">";
+            return ss.str();
         }
     };
   //-------------------------------------------------------------------------------------------------
@@ -79,9 +88,13 @@ namespace mpi
     public:
         ~MessageItemList();
 
-     // Add an item to the message (behaves as FIFO)
-        template<typename T> 
-        MessageItem<T>* // Return the constructed MessageItem. Occasionally needed.
+        size_t size() const { return list_.size(); }
+
+     // Add a simple item to the message
+        template<typename T>
+        MessageItem<T>* // Return the constructed MessageItem.
+                        // This is occasionally needed when other MessageItems need to know about it.
+                        // E.g. the ParticleArray MessageItem needs a ParticleContainer MessageItem.
         push_back
           ( T& t // object to incorporate in the message
           )
@@ -91,29 +104,31 @@ namespace mpi
             return p;
         }
 
-     // Add an item to the message
+     // Add an item to the message that needs access to another MessageItem.
         template<typename T>
-        MessageItem<T>* // Return the constructed MessageItem. Occasionally needed.
+        MessageItem<T>* // Return the constructed MessageItem.
+                        // This is occasionally needed when other MessageItems need to know about it.
+                        // E.g. the ParticleArray MessageItem needs a ParticleContainer MessageItem.
         push_back
           ( T& t // object to incorporate in the message
-          , MessageItemBase* ptr_mi // a MessageItem that contains information needed by this MessageItem
-                                    // e.g. the ParticleArray MessageItem needs a ParticleContainer MessageItem.
+          , MessageItemBase* pOtherItem // a MessageItem that contains information needed by the MessageItem to be constructed
           )
         {
-            MessageItem<T>* p = new MessageItem<T>(t, ptr_mi);
+            MessageItem<T>* p = new MessageItem<T>(t, pOtherItem);
             list_.push_back(p);
             return p;
         }
 
-     // Write the message to ptr in the MessageBuffer
+     // Write the message to a buffer at ptr.
         void write(void*& ptr) const;
 
-     // Read the message from ptr in the MessageBuffer
+     // Read the message from ptr in buffer
         void read (void*& ptr);
 
      // Compute the number of bytes the message occupies in a MessageBuffer.
-        size_t computeBufferSize() const;
+        size_t computeMessageBufferSize() const;
 
+        INFO_DECL;
     };
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

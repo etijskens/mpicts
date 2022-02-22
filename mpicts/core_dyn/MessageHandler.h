@@ -29,15 +29,7 @@ namespace mpi
             return *registry_[key];
         }
 
-        template<typename MessageHandler, class... Args>
-        MessageHandler&
-        create(Args &&...args )
-        {
-            MessageHandler* pMessageHandler = new MessageHandler(args...);
-            registerMessageHandler(pMessageHandler);
-            return *pMessageHandler;
-        }
-
+        INFO_DECL;
     private:
         size_t counter_;
         std::map<key_type, MessageHandler*> registry_;
@@ -55,7 +47,8 @@ namespace mpi
     {
     public:
         using key_type = MessageHandlerRegistry::key_type;
-        static MessageBufferPool theMessageBufferPool;
+        static MessageHandlerRegistry theMessageHandlerRegistry;
+        static MessageBufferPool      theMessageBufferPool;
     private:
         friend class MessageHandlerRegistry;
 
@@ -80,7 +73,10 @@ namespace mpi
               : messageHeader_(src,dst,key)
             {// messageBuffer_ remains empty, sofar.
             }
+
             void getBuffer(size_t nBytes) { messageBuffer_ = theMessageBufferPool.getBuffer(nBytes); }
+
+            INFO_DECL;
         };
 
     private: // data
@@ -90,41 +86,36 @@ namespace mpi
         mutable MessageItemList messageItemList_;
         key_type key_; // Identification key of the MessageHandler in the registry.
 
-        MessageHandler() // default ctor protected
-        {}
-
     public:
-     // copy ctor
-//        MessageHandler(MessageHandler const & messageHandler)
-//          : key_             (messageHandler.key_)
-//          , pMessageItemList_(messageHandler.pMessageItemList_)
-//        {}
+        MessageHandler();
 
         virtual ~MessageHandler();
 
      // data member access
-        inline MessageItemList& messageItemList() {
-            return messageItemList_;
-        }
+        inline MessageItemList const& messageItemList() const { return messageItemList_; }
+        inline MessageItemList      & messageItemList()       { return messageItemList_; }
 
         inline MessageHandlerRegistry::key_type key() const { return key_; }
 
         void addMessage(int destination);
 
      // Member functions for MessageBuffer manipulation
-        size_t // buffer size in number of bytes.
-        computeBufferSize();
+
+        size_t // number of bytes.
+        computeMessageBufferSize(); // Compute the size (bytes) that a message will occupy when written to a buffer
 
         void
         writeBuffer       // Write the message in the messageBuffer
-          ( void* pBuffer // pointer to buffer which is assumed large enough
+          ( void* pBuffer // pointer to buffer
           ) const;
 
         void
         readBuffer       // Write the message in the messageBuffer
-          ( void* pBuffer // pointer to buffer which is assumed large enough
+          ( void* pBuffer // pointer to buffer
           ) const;
 
+        INFO_DECL;
+        STATIC_INFO_DECL;
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

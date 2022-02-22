@@ -8,13 +8,13 @@ namespace mpi
     MessageItemList::
     ~MessageItemList()
     {
-        if constexpr(::mpi::_debug_ && _debug_)
-            prdbg("~MessageItemList() : deleting MessageItems");
+        size_t counter = 0;
         for( auto p : list_) {
             delete p;
+            ++counter;
         }
         if constexpr(::mpi::_debug_ && _debug_)
-            prdbg("~MessageItemList() : MessageItems deleted.");
+            prdbg(tostr("~MessageItemList() : ", counter, "/", list_.size(), " MessageItems deleted."));
     }
 
     void
@@ -45,15 +45,24 @@ namespace mpi
 
     size_t // the number of bytes the mesage occupies in the MessageBuffer
     MessageItemList::
-    computeBufferSize() const
+    computeMessageBufferSize() const
     {
         size_t sz = 0;
         for( auto pItem : list_) {
-            sz += pItem->computeByteSize();
+            sz += pItem->computeItemBufferSize();
         }
         return sz;
     }
 
+    INFO_DEF(MessageItemList)
+    {
+        std::stringstream ss;
+        ss<<indent<<"MessageItemList.info("<<title<<")";
+        for( auto pItem : list_) {
+            ss<<pItem->info( indent + "  " );
+        }
+        return ss.str();
+    }
 //    Lines_t
 //    MessageItemList::
 //    debug_text() const

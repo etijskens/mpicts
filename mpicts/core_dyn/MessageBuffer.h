@@ -67,7 +67,7 @@ namespace mpi
 
         void* raw() { return pBytes_; }
 
-        std::string info( std::string const& s = std::string() ) const;
+        INFO_DECL;
     };
 
  //------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ namespace mpi
 
         void* raw() { return pBuffer_->raw(); }
 
-        std::string info( std::string const& s = std::string() ) const;
+        INFO_DECL;
     };
 
  //------------------------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ namespace mpi
           ( size_t size // the minimum size of the buffer in bytes
           );
 
-        std::string info( std::string const& s = std::string() ) const;
+        INFO_DECL;
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

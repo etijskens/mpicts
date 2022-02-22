@@ -68,10 +68,10 @@ namespace mpi
                     static_assert(fixed_size_memcpy_able<T>::value || variable_size_memcpy_able<T>::value, "type T is not memcpy-able");
             }
 
-         // Compute the size that t will occupy in the message. 
+         // Compute the size (bytes) that t will occupy when written to a buffer.
             static 
             size_t      // size that t will occupy in a message, in bytes.
-            computeByteSize
+            computeItemBufferSize
               ( T& t    // a T object t, either fixed_size_memcpy_able or variable_size_memcpy_able.
               ) 
             {
@@ -255,13 +255,14 @@ namespace mpi
         internal::memcpy_traits<T>::read(t,src);
     }
 
+ // Compute the size (bytes) that a T object will occupy when written to a buffer.
     template <typename T>
-    size_t      // returns the size that the T object t will occupy in a message
-    computeByteSize
+    size_t      // number of bytes
+    computeItemBufferSize
       (  T& t   // a T object, either fixed_size_memcpy_able or variable_size_memcpy_able
       ) 
     {
-        return internal::memcpy_traits<T>::computeByteSize(t);
+        return internal::memcpy_traits<T>::computeItemBufferSize(t);
     }
  //-------------------------------------------------------------------------------------------------
 }// namespace mpi

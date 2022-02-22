@@ -10,8 +10,7 @@
 #include <Eigen/Geometry> //?
 
 
-#define  INFO info
-#define CINFO info.c_str()
+#define CINFO INFO.c_str()
 
 /*
     https://stackoverflow.com/questions/35324597/writing-to-text-file-in-mpi
@@ -28,7 +27,7 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
  // Global variables set by mpi::init()
     extern int rank;
     extern int size;
-    extern std::string info; // "MPI rank [rank/size]", useful for debugging messages
+    extern std::string INFO; // "MPI rank [rank/size]", useful for debugging messages
 
  //---------------------------------------------------------------------------------------------------------------------
  // typedefs
@@ -148,5 +147,36 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
     }
  //---------------------------------------------------------------------------------------------------------------------
 }// namespace mpi
+
+#define STATIC_INFO_DECL                               \
+    static                                             \
+    std::string                                        \
+    static_info                                        \
+      ( std::string const& indent = std::string("\n")  \
+      , std::string const& title  = std::string()      \
+      )
+
+#define STATIC_INFO_DEF(classname)  \
+    std::string                     \
+    classname::                     \
+    static_info                     \
+      ( std::string const& indent   \
+      , std::string const& title    \
+      )
+
+#define INFO_DECL                                       \
+    std::string                                         \
+    info                                                \
+      ( std::string const& indent = std::string("\n")   \
+      , std::string const& title = std::string()        \
+      ) const
+
+#define INFO_DEF(classname)         \
+    std::string                     \
+    classname::                     \
+    info                            \
+      ( std::string const& indent   \
+      , std::string const& title    \
+      ) const
 
 #endif // MPICTS_H
