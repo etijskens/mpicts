@@ -37,10 +37,16 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     MessageHandlerRegistry MessageHandler::theMessageHandlerRegistry;
 
-
     MessageHandler::
     MessageHandler()
     {
+     // This has to happen somewhere
+        if( MessageHeader::theHeaders.size() == 0 )
+        {// Make sure that there is a MessageHeaderContainer for every MPI rank
+            prdbg("MessageHeader::theHeaders.resize( (size_t) mpi::size );");
+            MessageHeader::theHeaders.resize( (size_t) mpi::size );
+        }
+
         theMessageHandlerRegistry.registerMessageHandler(this);
     }
 
@@ -100,22 +106,17 @@ namespace mpi
     {// Note that MessageHeader::broadcastMessageHeaders() must be called before calling
      // sendMessages(), to make sure that every rank knows all the MessageHeaders
 
-//        if( mpi::size == 1
-//         || mpi::size == -1 // mpi::init() not called, occurs during testing only
-//          )
-//        {// nothing to do
-//            prdbg("WARNING: mpi::init() was not called.");
-//        } else {
-//        }
         for( auto pMessageData : sendMessages_ )
         {// allocate buffer for this message
             pMessageData->allocateBuffer();
             prdbg(pMessageData->info("\n","sendMessages"));
+
          // write the message to the buffer
-            MessageHandler& hndlr = theMessageHandlerRegistry[pMessageData->key()];
-            hndlr.messageItemList().write(pMessageData);
+            messageItemList().write(pMessageData);
+
+         // send the message
             if( mpi::size > 1 )
-            {// send the message
+            {
                 MPI_Request request;
                 int success =
                 MPI_Isend                       // non-blocking send
@@ -141,6 +142,29 @@ namespace mpi
     MessageHandler::
     recvMessages() // Read the messages from the receive buffers
     {
+        prdbg( tostr(static_info("\n", "recvMessages()")
+                    )
+             );
+        for( auto pMessageData : recvMessages_ )
+        {// allocate buffer for this message
+            prdbg(pMessageData->info("\n","recvMessages"));
+            pMessageData->allocateBuffer();
+
+         // Receive the message
+            int succes =
+            MPI_Recv
+              ( pMessageData->bufferPtr() // pointer to buffer where to store the message
+              , pMessageData->size()      // number of elements to receive
+              , MPI_CHAR
+              , pMessageData->src()       // source rank
+              , pMessageData->key()       // tag
+              , MPI_COMM_WORLD
+              , MPI_STATUS_IGNORE
+              );
+
+         // read the message from the buffer
+            messageItemList().read(pMessageData);
+        }
     }
 
  //------------------------------------------------------------------------------------------------
@@ -178,14 +202,22 @@ namespace mpi
 
         ss<<indent<<"MessageHandler.info("<<"key="<<key_<<") :"
                   <<messageItemList().info(indent + "  ")
-          <<indent<<"  sendMessages_ :"
-          ;
-        if(sendMessages_.size()) {
+          <<indent<<"  sendMessages_ :";
+        if( sendMessages_.size()) {
             for( size_t m = 0; m < sendMessages_.size(); ++m ) {
                 ss<<sendMessages_[m]->info(indent + "    ", tostr("message ", m, " of ",sendMessages_.size()));
             }
         } else {
-            ss<<indent<<"  ( empty )";
+            ss<<indent<<"    ( empty )";
+        }
+
+        ss<<indent<<"  recvMessages_ :";
+        if( recvMessages_.size()) {
+            for( size_t m = 0; m < recvMessages_.size(); ++m ) {
+                ss<<recvMessages_[m]->info(indent + "    ", tostr("message ", m, " of ",recvMessages_.size()));
+            }
+        } else {
+            ss<<indent<<"    ( empty )";
         }
         return ss.str();
     }

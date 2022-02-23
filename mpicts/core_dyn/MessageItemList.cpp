@@ -56,6 +56,7 @@ namespace mpi
             sz += pItem->computeItemBufferSize();
         }
         pMessageData->size() = sz;
+        //prdbg(pMessageData->info());
         return sz;
     }
 

@@ -48,26 +48,46 @@ namespace test
                                                 // size_t       8 bytes
                                                 // --------------------
                                                 //             32 bytes
+            if( mpi::rank != 0 ) {
+                a = 0;
+                for( auto & i : ints ) i = 0;
+            }
             MessageHandler hndlr;
-            prdbg(MessageHandler::static_info());
             hndlr.messageItemList().push_back(a);
             hndlr.messageItemList().push_back(ints);
             prdbg(MessageHandler::static_info());
-            hndlr.addSendMessage(0);
-            hndlr.addSendMessage(0);
-            prdbg(MessageHeader::static_info());
-            prdbg(hndlr.info("\n", "*0"));
+            prdbg(MessageHeader ::static_info("\n", "huh?"));
 
-            prdbg("MessageHeader::broadcastMessageHeaders()");
+            if( mpi::rank == 0 )
+            {// rank 0 sends the same message to ranks 1 and 2
+                hndlr.addSendMessage(1);
+                hndlr.addSendMessage(2);
+
+                prdbg(MessageHeader::static_info());
+                prdbg(hndlr.info("\n", "*0"));
+            }
+
+            prdbg("before MessageHeader::broadcastMessageHeaders()");
             MessageHeader::broadcastMessageHeaders();
-
+            prdbg(tostr("after MessageHeader::broadcastMessageHeaders()"
+                       , MessageHeader::static_info()
+                       )
+                 );
 
             prdbg("hndlr.sendMessages()");
             hndlr.sendMessages();
+            hndlr.recvMessages();
 
             prdbg(hndlr.info("\n", "*1"));
             prdbg(MessageHandler::static_info());
             prdbg(MessageHeader::static_info());
+            prdbg( tostr( "\na="      , a
+                        , "\nints[0]=", ints[0]
+                        , "\nints[1]=", ints[1]
+                        , "\nints[2]=", ints[2]
+                        , "\nints[3]=", ints[3]
+                        )
+                 );
         }
         finalize();
         return true;

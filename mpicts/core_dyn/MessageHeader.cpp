@@ -76,12 +76,6 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     std::vector<MessageHeaderContainer> MessageHeader::theHeaders;
 
-//    MessageHeader::
-//    MessageHeader()
-//    {
-//        alloc_();
-//    }
-
  // Create a MessageHeader for sending a message
     MessageHeader::
     MessageHeader
@@ -113,18 +107,9 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     void
     MessageHeader::
-    alloc_()
+    alloc_() // Add a MessageHeader in this rank's MessageHeaderContainer
     {
-        if( theHeaders.size() == 0 )
-        {// Make sure that there is a MessageHeaderContainer for every MPI rank, or, if mpi was not
-         // initialized (which may occur during testing), that there is at least one MessageHeaderContainer.
-            size_t sz = ( mpi::rank == -1 ) ? 1 // if mpi::init() was not called
-                                            : (size_t) mpi::size;
-            theHeaders.resize( sz );
-        }
-     // allocate a header in this rank's MessageHeaderContainer
         i_ = theHeaders[src_].addHeader();
-         // if mpi::init() was not called src_ is 0
     }
 
  //------------------------------------------------------------------------------------------------
@@ -193,7 +178,7 @@ namespace mpi
             for( int source = 0; source < mpi::size; ++source ) {
                 MPI_Bcast
                 ( &(theHeaders[source][0])
-                , theHeaders[source].size() * sizeof(MessageHeader) // # of bytes
+                , theHeaders[source].size() * sizeof(MessageHeaderData) // # of bytes
                 , MPI_CHAR
                 , source
                 , MPI_COMM_WORLD
@@ -203,15 +188,18 @@ namespace mpi
          // loop over all messages and create MessageData for each message to receive
             for( int src = 0; src < mpi::size; ++src ) {// loop over all senders
                 if( src != mpi::rank ) {// we are not sending to / receiving from ourselve
-                    MessageHeaderContainer& srcHeaders = theHeaders[rank];
+                    MessageHeaderContainer& srcHeaders = theHeaders[src];
                     for( size_t i = 0; i < srcHeaders.size(); ++i ) {// loop over all message from src
                         if( srcHeaders[i].dst == mpi::rank ) {// this is a message for me
+                            prdbg(tostr(mpi::rank, " receiving from ", src, " i=", i));
                             MessageHandler& hndlr = MessageHandler::theMessageHandlerRegistry[srcHeaders[i].key];
                             hndlr.addRecvMessage(src, i);
                         }
                     }
                 }
             }
+            if constexpr(::mpi::_debug_ && _debug_)
+                prdbg(MessageHandler::static_info("\n","broadcastMessageHeaders end"));
         }
     }
  //------------------------------------------------------------------------------------------------
