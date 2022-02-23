@@ -24,42 +24,6 @@ using namespace mpi;
 
 namespace test
 {//---------------------------------------------------------------------------------------------------------------------
-    bool test_MessageBuffer()
-    {
-        std::cout<<"-*# test_MessageBuffer() #*-"<<std::endl;
-
-        Buffer b(10);
-        std::cout<<b.info("b")<<std::endl;
-        {
-            MessageBuffer sb(&b);
-            std::cout<<sb.info("sb")<<std::endl;
-            MessageBuffer sb2;
-            sb2 = sb;
-            std::cout<<sb.info("sb")<<std::endl;
-            std::cout<<sb2.info("sb2")<<std::endl;
-        }
-        std::cout<<b.info("b final")<<std::endl;
-        return true;
-    }
-
- //---------------------------------------------------------------------------------------------------------------------
-    bool test_MessageBufferPool()
-    {
-        std::cout<<"-*# test_MessageBufferPool() #*-"<<std::endl;
-
-        {
-            MessageBuffer sb0 = Buffer::getBuffer(10);
-            std::cout<<sb0.info()<<std::endl;
-            std::cout<<Buffer::static_info()<<std::endl;
-            MessageBuffer sb1 = Buffer::getBuffer(20);
-            std::cout<<sb1.info()<<std::endl;
-            std::cout<<Buffer::static_info()<<std::endl;
-        }
-        std::cout<<Buffer::static_info()<<std::endl;
-        return true;
-    }
-
- //---------------------------------------------------------------------------------------------------------------------
     bool test_MessageHeader()
     {
         std::cout<<"-*# test_MessageHeader() #*-"<<std::endl;
@@ -89,11 +53,21 @@ namespace test
             hndlr.messageItemList().push_back(a);
             hndlr.messageItemList().push_back(ints);
             prdbg(MessageHandler::static_info());
-//            prdbg(tostr("{a,ints} messageBufferSize = ", hndlr.computeMessageBufferSize()));
-            hndlr.addMessage(0);
-            hndlr.addMessage(0);
+            hndlr.addSendMessage(0);
+            hndlr.addSendMessage(0);
             prdbg(MessageHeader::static_info());
-            prdbg(hndlr.info());
+            prdbg(hndlr.info("\n", "*0"));
+
+            prdbg("MessageHeader::broadcastMessageHeaders()");
+            MessageHeader::broadcastMessageHeaders();
+
+
+            prdbg("hndlr.sendMessages()");
+            hndlr.sendMessages();
+
+            prdbg(hndlr.info("\n", "*1"));
+            prdbg(MessageHandler::static_info());
+            prdbg(MessageHeader::static_info());
         }
         finalize();
         return true;
@@ -106,8 +80,6 @@ PYBIND11_MODULE(core_dyn, m)
     m.doc() = "pybind11 core_dyn plugin"; // optional module docstring
  // list the functions you want to expose:
  // m.def("exposed_name", function_pointer, "doc-string for the exposed function");
-    m.def("test_MessageBuffer"    , &test::test_MessageBuffer, "");
-    m.def("test_MessageBufferPool", &test::test_MessageBufferPool, "");
     m.def("test_MessageHeader"    , &test::test_MessageHeader, "");
     m.def("test_MessageHandler"   , &test::test_MessageHandler, "");
 }

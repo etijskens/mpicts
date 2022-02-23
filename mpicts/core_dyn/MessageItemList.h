@@ -124,10 +124,10 @@ namespace mpi
         }
 
      // Write the message to a buffer at ptr.
-        void write(void*& ptr) const;
+        void write(MessageData* pMessageData) const;
 
      // Read the message from ptr in buffer
-        void read (void*& ptr);
+        void read(MessageData* pMessageData);
 
      // Compute the number of bytes the message occupies in a MessageBuffer.
         size_t

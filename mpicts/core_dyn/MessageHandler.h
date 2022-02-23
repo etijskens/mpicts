@@ -56,7 +56,8 @@ namespace mpi
     protected: // member class
 
     private: // data
-        std::vector<MessageData*> messageDataList_; // one entry for each message using this MessageHandler's messageItemList_
+        std::vector<MessageData*> sendMessages_; // one entry for each message to send using this MessageHandler's messageItemList_
+        std::vector<MessageData*> recvMessages_; // one entry for each message to receive using this MessageHandler's messageItemList_
 
     protected: // data
         mutable MessageItemList messageItemList_; // the entries reference the objects from which the message is composed
@@ -77,29 +78,36 @@ namespace mpi
         STATIC_INFO_DECL;
 
      // High level member functions for MessageBuffer manipulation
-        void addMessage(int destination);
+        void addSendMessage(int destination);
+        void addRecvMessage(int src, size_t i);
 
-        inline size_t nMessages() const { return messageDataList_.size(); }
+        inline size_t nSendMessages() const { return sendMessages_.size(); }
+        inline size_t nRecvMessages() const { return recvMessages_.size(); }
 
-        void postMessages();     // Allocate buffers and write the messages to their buffers.
-        void transferMessages(); // Send and receive the messages
-        void readMessages();     // Read the messages from the receive buffers
+        void computeMessageBufferSizes();
+         // compute the size of all messages this MPI rank wil send, and store it in its MessageHeader.
+
+        void sendMessages();
+         // Allocate buffers, write the messages ito the buffers, and send them.
+
+        void recvMessages();
+         // receive the messages in the receive buffers, and read them into their objects
 
     protected:
      // Low level member functions for MessageBuffer manipulation
 //        size_t                   // number of bytes the message needs
 //        computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
-//          ( size_t i             // index of the message in messageDataList_
+//          ( size_t i             // index of the message in sendMessages_
 //          );
 //
 //        void
 //        writeBuffer   // Write the i-th message to its messageBuffer. The buffer is automatically adjusted.
-//          ( size_t i  // index of the message in messageDataList_
+//          ( size_t i  // index of the message in sendMessages_
 //          );
 //
 //        void
 //        readBuffer    // Read the i-th message from the messageBuffer. The buffer is automatically adjusted.
-//          ( size_t i  // index of the message in messageDataList_
+//          ( size_t i  // index of the message in sendMessages_
 //          );
     };
  //------------------------------------------------------------------------------------------------

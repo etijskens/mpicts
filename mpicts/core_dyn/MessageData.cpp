@@ -4,12 +4,13 @@ namespace mpi
 {//------------------------------------------------------------------------------------------------
     void
     MessageData::
-    getBuffer
-      ( size_t nBytes
-      )
+    allocateBuffer()
     {
-        messageBuffer_ = Buffer::getBuffer(nBytes);
+        size_t nBytes = messageHeader_.size();
+        messageBuffer_.alloc( nBytes );
+        prdbg(tostr("*MessageData::getBuffer(", nBytes, ")", info()));
     }
+
 
  //------------------------------------------------------------------------------------------------
     INFO_DEF(MessageData)

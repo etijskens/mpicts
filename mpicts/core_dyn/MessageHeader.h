@@ -13,17 +13,19 @@ namespace mpi
  // Struct with the data needed for a MessageHeader
  //------------------------------------------------------------------------------------------------
     {
-        MessageHandlerKey_t key;  // MessageHandler key of the message
-        size_t size;     // message size in bytes
-        int source;      // the source MPI rank of the message
-        int destination; // the destination MPI rank of the message
+        using Key_t = MessageHandlerKey_t;
+
+        Key_t  key;  // MessageHandler key of the message
+        size_t size; // message size in bytes
+        int    src;  // the source MPI rank of the message
+        int    dst;  // the destination MPI rank of the message
 
         void invalidate() {
-            source = INVALID;
+            src = INVALID;
         }
 
         bool isValid() const {
-            return source != INVALID;
+            return src != INVALID;
         }
 
         INFO_DECL;
@@ -85,32 +87,37 @@ namespace mpi
          // Indices are not invalidated when theHeaders is resized, as opposed to pointers and iterators.
 
     public: // data
+        using Key_t = MessageHandlerKey_t;
+
         static std::vector<MessageHeaderContainer> theHeaders;
          // One MessageHeaderContainer per MPI rank
 
+        static void broadcastMessageHeaders();
 
     public:
-        MessageHeader
-          ( int src                 // MPI source rank
-          , int dst                 // MPI source rank
-          , MessageHandlerKey_t key //
-          , size_t sz = 0           // size of message in bytes, usually set later (must be computed first
+        MessageHeader     // Create a MessageHeader for receiving a message
+          ( int src       // MPI source rank
+          , int dst       // MPI destination rank
+          , Key_t key     // MessageHandler key
+          , size_t sz = 0 // size of message in bytes, usually set later (must be computed first
           );
 
-        MessageHeader
-          ( MessageHeaderData* pMessageHeaderData
+        MessageHeader     // Create a MessageHeader for receiving a message
+          ( int src       // MPI source rank from whom to receive
+          , size_t i      // location in MessageHeaderContainer for MPI rank src
           );
 
      // Default copy ctor should be good to go
 
-        int  source()              const { return theHeaders[src_][i_].source; }
-        int& source()                    { return theHeaders[src_][i_].source; }
-        int  destination()         const { return theHeaders[src_][i_].destination; }
-        int& destination()               { return theHeaders[src_][i_].destination; }
-        MessageHandlerKey_t  key() const { return theHeaders[src_][i_].key; }
-        MessageHandlerKey_t& key()       { return theHeaders[src_][i_].key; }
-        size_t  size()             const { return theHeaders[src_][i_].size; }
-        size_t& size()                   { return theHeaders[src_][i_].size; }
+     // data member access:
+        int     src()  const { return theHeaders[src_][i_].src; }
+        int&    src()        { return theHeaders[src_][i_].src; }
+        int     dst()  const { return theHeaders[src_][i_].dst; }
+        int&    dst()        { return theHeaders[src_][i_].dst; }
+        Key_t   key()  const { return theHeaders[src_][i_].key; }
+        Key_t&  key()        { return theHeaders[src_][i_].key; }
+        size_t  size() const { return theHeaders[src_][i_].size; }
+        size_t& size()       { return theHeaders[src_][i_].size; }
 
         INFO_DECL;
         STATIC_INFO_DECL;

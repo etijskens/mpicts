@@ -20,9 +20,10 @@ namespace mpi
     void
     MessageItemList::
     write
-      ( void*& ptr // pointer where the message should be written to.
+      ( MessageData* pMessageData
       ) const
     {
+        void* ptr = pMessageData->bufferPtr();
         MessageItemBase * const * pBegin = &list_[0];
         MessageItemBase * const * pEnd   = pBegin + list_.size();
         for( MessageItemBase * const * p = pBegin; p < pEnd; ++p) {
@@ -33,9 +34,10 @@ namespace mpi
     void
     MessageItemList::
     read
-      ( void*& ptr // pointer where the message should be read from.
+      ( MessageData* pMessageData
       )
     {
+        void* ptr = pMessageData->bufferPtr();
         MessageItemBase ** pBegin = &list_[0];
         MessageItemBase ** pEnd   = pBegin + list_.size();
         for( MessageItemBase ** p = pBegin; p < pEnd; ++p) {
@@ -53,6 +55,7 @@ namespace mpi
         for( auto pItem : list_) {
             sz += pItem->computeItemBufferSize();
         }
+        pMessageData->size() = sz;
         return sz;
     }
 

@@ -49,8 +49,8 @@ namespace mpi
     {
         if constexpr(::mpi::_debug_ && _debug_) prdbg( "~MessageHandler()" );
 
-     // destroy the MessageData objects in messageDataList_:
-        for( auto pMessageData : messageDataList_ )
+     // destroy the MessageData objects in sendMessages_:
+        for( auto pMessageData : sendMessages_ )
         {
             if( pMessageData ) {
                 if constexpr(::mpi::_debug_ && _debug_) prdbg(tostr("delete pMessageData=", pMessageData));
@@ -65,34 +65,81 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    addMessage(int destination)
+    addSendMessage(int destination)
     {
         assert( destination < mpi::size
              && "Invalid MPI rank for destination."
               ); // https://stackoverflow.com/questions/3692954/add-custom-messages-in-assert/26984456
          // We allow sending to self rank for testing.
 
-        messageDataList_.push_back(new MessageData( mpi::rank, destination, this->key_ ));
+        sendMessages_.push_back(new MessageData( mpi::rank, destination, this->key_ ));
     }
 
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    postMessages() // Allocate buffers and write the messages to their buffers.
+    addRecvMessage(int src, size_t i)
     {
+        recvMessages_.push_back(new MessageData(src, i));
     }
 
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    transferMessages() // Send and receive the messages
+    computeMessageBufferSizes()
     {
+        for( auto pMessageData : sendMessages_ ) {
+            messageItemList().computeMessageBufferSize(pMessageData);
+        }
     }
 
  //------------------------------------------------------------------------------------------------
     void
     MessageHandler::
-    readMessages() // Read the messages from the receive buffers
+    sendMessages() // Allocate buffers and write the messages to their buffers.
+    {// Note that MessageHeader::broadcastMessageHeaders() must be called before calling
+     // sendMessages(), to make sure that every rank knows all the MessageHeaders
+
+//        if( mpi::size == 1
+//         || mpi::size == -1 // mpi::init() not called, occurs during testing only
+//          )
+//        {// nothing to do
+//            prdbg("WARNING: mpi::init() was not called.");
+//        } else {
+//        }
+        for( auto pMessageData : sendMessages_ )
+        {// allocate buffer for this message
+            pMessageData->allocateBuffer();
+            prdbg(pMessageData->info("\n","sendMessages"));
+         // write the message to the buffer
+            MessageHandler& hndlr = theMessageHandlerRegistry[pMessageData->key()];
+            hndlr.messageItemList().write(pMessageData);
+            if( mpi::size > 1 )
+            {// send the message
+                MPI_Request request;
+                int success =
+                MPI_Isend                       // non-blocking send
+                  ( pMessageData->bufferPtr()   // pointer to buffer to send
+                  , pMessageData->size()        // number of Index_t elements to send
+                  , MPI_CHAR
+                  , pMessageData->dst()         // the destination
+                  , pMessageData->key()         // the tag
+                  , MPI_COMM_WORLD
+                  , &request
+                  );
+             // todo: We have a problem if a MessageHandler does more than one send with the same destination:
+             // Then source and tag=key are no longer unique. This is probable happen for a
+             // ParticleContainerMessageHandler sending ghost particles and leaving particles in a separate go.
+             // One solution is to select a random tag and put it into the MessageHeader, so that the receiver
+             // can pick up the tag there.
+            }
+        }
+    }
+
+ //------------------------------------------------------------------------------------------------
+    void
+    MessageHandler::
+    recvMessages() // Read the messages from the receive buffers
     {
     }
 
@@ -100,10 +147,10 @@ namespace mpi
 //    size_t                   // number of bytes the message needs
 //    MessageHandler::
 //    computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
-//      ( size_t i             // index of the message in messageDataList_
+//      ( size_t i             // index of the message in sendMessages_
 //      )
 //    {
-//        return messageItemList_.computeMessageBufferSize(messageDataList_[i]);
+//        return messageItemList_.computeMessageBufferSize(sendMessages_[i]);
 //    }
 //
 // //------------------------------------------------------------------------------------------------
@@ -127,16 +174,18 @@ namespace mpi
     INFO_DEF(MessageHandler)
     {
         std::stringstream ss;
-        std::string t = title;
-        if( !t.empty() ) t += ", ";
-        t += tostr("key=", key_);
-        ss<<indent<<"MessageHandler.info("<<t<<") :"
-                  <<messageItemList().info(indent + "  ")
-          <<indent<<"  messageDataList_ :"
-          ;
+        if( !title.empty() ) ss<<title;
 
-        for( size_t m = 0; m < messageDataList_.size(); ++m ) {
-            ss<<messageDataList_[m]->info(indent + "    ", tostr("message ", m, " of ",messageDataList_.size()));
+        ss<<indent<<"MessageHandler.info("<<"key="<<key_<<") :"
+                  <<messageItemList().info(indent + "  ")
+          <<indent<<"  sendMessages_ :"
+          ;
+        if(sendMessages_.size()) {
+            for( size_t m = 0; m < sendMessages_.size(); ++m ) {
+                ss<<sendMessages_[m]->info(indent + "    ", tostr("message ", m, " of ",sendMessages_.size()));
+            }
+        } else {
+            ss<<indent<<"  ( empty )";
         }
         return ss.str();
     }
@@ -147,7 +196,6 @@ namespace mpi
         std::stringstream ss;
         ss<<"\nMessageHandler::static_info("<<title<<") :"
           <<theMessageHandlerRegistry.info(indent + "  ")
-          <<Buffer::static_info(indent + "  ")
           ;
 
         return ss.str();

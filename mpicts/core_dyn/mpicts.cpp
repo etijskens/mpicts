@@ -9,8 +9,8 @@
 
 namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
-    int rank = -1;
-    int size = -1;
+    int rank = 0; // just in case mpi::init was not called, used for testing
+    int size = 1; // just in case mpi::init was not called, used for testing
     std::string INFO;
     std::string dbg_fname;
     int64_t timestamp0;
