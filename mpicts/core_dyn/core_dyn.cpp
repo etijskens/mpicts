@@ -118,7 +118,6 @@ namespace test
 
         int dst = mpi::next_rank();
         Indices_t indices = {1,3,5,7};
-        bool move = true;
         pcmh.addSendMessage(dst, indices, move);
         {
         }

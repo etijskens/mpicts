@@ -30,6 +30,7 @@ namespace mpi
     {
         size_t nBytes_;
         char* pBuffer_; // pointer to the beginning of the buffer
+
     public:
         MessageBuffer()
           : nBytes_(0)
@@ -61,9 +62,7 @@ namespace mpi
         }
 
         void*  ptr() const { return pBuffer_; }
-      //void*  ptr()       { return pBuffer_; }
         size_t size() const { return nBytes_; }
-      //size_t size()       { return nBytes_; }
         INFO_DECL;
     };
 

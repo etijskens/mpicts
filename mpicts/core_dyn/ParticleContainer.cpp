@@ -105,10 +105,10 @@ namespace mpi
     addSendMessage
       ( int destination
       , Indices_t const & selection
-      , bool move
+      , Mode mode
       )
     {
-        sendMessages_.push_back(new PcMessageData( mpi::rank, destination, this->key_, selection, move ));
+        sendMessages_.push_back(new PcMessageData( mpi::rank, destination, this->key_, selection, mode ));
     }
 
  //---------------------------------------------------------------------------------------------------------------------

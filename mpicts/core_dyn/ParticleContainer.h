@@ -72,23 +72,50 @@ namespace mpi
 {//------------------------------------------------------------------------------------------------
     using namespace mpacts;
 
+ //-------------------------------------------------------------------------------------------------
+    enum Mode
+ // Operation mode for ParticleContainer Messages
+ //-------------------------------------------------------------------------------------------------
+    { move // Move particles: the selected particles are destroyed in the sender after sending.
+           // The receivers adds the particles
+    , copy // Copy particles: the selected particles are not destroyed in the sender after sending.
+           // The receivers adds the particles
+  //, set  // Overwrite particles at the receiving end. The sender sends a list of particle ids.
+    };
+ // todo: extend move/copy to move/copy/set
+ // The receiver translates the IDs to the corresponding particle indices and overwrites
+ // the received arrays with the received array values for the selection.
+
+    std::string
+    str( Mode mode )
+    {
+        switch(mode) {
+            case move: return "Move : selected particles are moved from sender to receiver.";
+            case copy: return "Copy : selected particles are copied from sender to receiver.";
+         // case set : return "set : selected particles are overwritten at the receiving end.";
+            default:
+                assert(false && "Unknwown mode");
+        }
+    }
+
  //------------------------------------------------------------------------------------------------
     class PcMessageData : public MessageData
  //------------------------------------------------------------------------------------------------
     {
         Indices_t indices_;
-        bool move_;
+        Mode      mode_;
+
     public:
         PcMessageData
           ( int src   // MPI source rank
           , int dst   // MPI destination rank
           , Key_t key // MessageHandler key
           , Indices_t const& selected // list of selected particles
-          , bool move                 // move or copy the selected, has only effect at the sending site
+          , Mode mode                 // operation mode
           )
           : MessageData(src, dst, key)
           , indices_(selected)
-          , move_(move)
+          , mode_(mode)
         {}
 
         PcMessageData  // Create MessageData for receiving a message
@@ -98,8 +125,8 @@ namespace mpi
           : MessageData(src, i)
         {}
 
-        bool move() const { return move_; }
-        bool move()       { return move_; }
+        Mode mode() const { return mode_; }
+        Mode mode()       { return mode_; }
         Indices_t const& indices() const { return indices_; }
         Indices_t      & indices()       { return indices_; }
     };
@@ -143,13 +170,13 @@ namespace mpi
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
             if constexpr(::mpi::_debug_ && _debug_) {
                 Lines_t lines = tolines("indices ", pPcMessageData->indices());
-                lines.push_back( tostr("move = ", pPcMessageData->move(), (pPcMessageData->move() ? "(particles are deleted)" : "(particles are copied)")) );
+                lines.push_back( tostr("mode = ", str(pPcMessageData->mode())) );
                 prdbg( tostr("MessageItem<ParticleContainer>::write(ptr)"), lines );
             }
 
             size_t nParticles = pPcMessageData->indices().size();
             ::mpi::write( nParticles, pos );
-            if( pPcMessageData->move() )
+            if( pPcMessageData->mode() == move )
             {// Remove the particles from the ParticleContainer
                 for( auto index : pPcMessageData->indices() )
                     ptr_pc_->remove(index);
@@ -293,11 +320,10 @@ namespace mpi
 
         void
         addSendMessage
-          ( int destination
-          , Indices_t const & indices
-          , bool move
+          ( int destination             // destination MPI rank
+          , Indices_t const & selection // List of selected particles
+          , Mode mode                   // Operation mode
           );
-
     };
 
  //-------------------------------------------------------------------------------------------------
