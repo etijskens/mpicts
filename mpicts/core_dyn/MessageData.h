@@ -37,6 +37,8 @@ namespace mpi
             allocateBuffer();
         }
 
+        virtual ~MessageData() {}
+
         void allocateBuffer();
 
 

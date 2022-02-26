@@ -14,12 +14,12 @@ namespace mpi
         {
     public:
         virtual ~MessageItemBase() {}
-    // write the message item to dst
-        virtual void write(void*& dst) const = 0;
-    // read the message item from src
-        virtual void read (void*& src)       = 0;
+    // write the message item to pos
+        virtual void write( void*& pos, MessageData* pMessageData ) const = 0;
+    // read the message item from pos
+        virtual void read ( void*& pos, MessageData* pMessageData ) = 0;
     // get the size of the message item (in bytes)
-        virtual size_t computeItemBufferSize() const = 0;
+        virtual size_t computeItemBufferSize( MessageData const* pMessageData ) const = 0;
 
         virtual INFO_DECL = 0;
     };
@@ -39,6 +39,7 @@ namespace mpi
           : ptrT_(&t)
           {}
 
+        virtual
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
@@ -46,19 +47,19 @@ namespace mpi
             }
         }
 
-     // Write the content of ptrT_ to dst
-        virtual void write( void*& dst ) const
+     // Write the content of ptrT_ to pos and advance pos
+        virtual void write( void*& pos, MessageData* pMessageData ) const
        {
             if constexpr(::mpi::_debug_ && _debug_) {
                 prdbg( tostr(info(), "::write()") );
             }
-            ::mpi::write( *ptrT_, dst );
+            ::mpi::write( *ptrT_, pos );
         }
 
      // Read the content of ptrT_ from src
-        virtual void read(void*& src)
+        virtual void read( void*& pos, MessageData* pMessageData )
         {
-            ::mpi::read( *ptrT_, src );
+            ::mpi::read( *ptrT_, pos );
 
             if constexpr(::mpi::_debug_ && _debug_) {
                 prdbg( tostr(info(), "::read()") );
@@ -67,7 +68,7 @@ namespace mpi
 
      // Compute the size (in bytes) that *ptrT_ will occupy in a message.
         virtual size_t computeItemBufferSize
-          (
+          ( MessageData const* /*pMessageData*/
           ) const
         {
             return ::mpi::computeItemBufferSize(*ptrT_);

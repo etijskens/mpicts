@@ -23,11 +23,12 @@ namespace mpi
       ( MessageData* pMessageData
       ) const
     {
-        void* ptr = pMessageData->bufferPtr();
+        void* bufferPos = pMessageData->bufferPtr();
+
         MessageItemBase * const * pBegin = &list_[0];
         MessageItemBase * const * pEnd   = pBegin + list_.size();
         for( MessageItemBase * const * p = pBegin; p < pEnd; ++p) {
-            (*p)->write(ptr);
+            (*p)->write( bufferPos, pMessageData );
         }
     }
 
@@ -37,11 +38,12 @@ namespace mpi
       ( MessageData* pMessageData
       )
     {
-        void* ptr = pMessageData->bufferPtr();
+        void* bufferPos = pMessageData->bufferPtr();
+
         MessageItemBase ** pBegin = &list_[0];
         MessageItemBase ** pEnd   = pBegin + list_.size();
         for( MessageItemBase ** p = pBegin; p < pEnd; ++p) {
-            (*p)->read(ptr);
+            (*p)->read( bufferPos, pMessageData );
         }
     }
 
@@ -53,7 +55,7 @@ namespace mpi
     {
         size_t sz = 0;
         for( auto pItem : list_) {
-            sz += pItem->computeItemBufferSize();
+            sz += pItem->computeItemBufferSize(pMessageData);
         }
         pMessageData->size() = sz;
         //prdbg(pMessageData->info());

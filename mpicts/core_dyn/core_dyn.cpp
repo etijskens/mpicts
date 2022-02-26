@@ -19,6 +19,10 @@ namespace py = pybind11;
 #include "MessageItemList.cpp"
 #include "MessageHeader.cpp"
 #include "MessageHandler.cpp"
+#define PC
+#ifdef PC
+#  include "ParticleContainer.cpp"
+#endif
 
 using namespace mpi;
 
@@ -41,6 +45,9 @@ namespace test
     bool test_MessageHandler()
     {
         init();
+        assert( mpi::size >= 3
+             && "At least 3 MPI processes are needed for this test."
+              );
         prdbg("-*# test_MessageHandler() #*-");
         {
             double a = 5;                       //              8 bytes
@@ -92,6 +99,33 @@ namespace test
         finalize();
         return true;
     }
+
+ //---------------------------------------------------------------------------------------------------------------------
+#ifdef PC
+    bool test_PcMessageHandler()
+    {// Move the odd particles to the next rank
+
+        init();
+        assert( mpi::size >= 2
+             && "At least 2 MPI processes are needed for this test."
+              );
+        prdbg("-*# test_PcMessageHandler() #*-");
+
+        ParticleContainer pc(8);
+        pc.prdbg();
+
+        PcMessageHandler pcmh(pc);
+
+        int dst = mpi::next_rank();
+        Indices_t indices = {1,3,5,7};
+        bool move = true;
+        pcmh.addSendMessage(dst, indices, move);
+        {
+        }
+        finalize();
+        return true;
+    }
+#endif
  //---------------------------------------------------------------------------------------------------------------------
 }
 
@@ -102,4 +136,7 @@ PYBIND11_MODULE(core_dyn, m)
  // m.def("exposed_name", function_pointer, "doc-string for the exposed function");
     m.def("test_MessageHeader"    , &test::test_MessageHeader, "");
     m.def("test_MessageHandler"   , &test::test_MessageHandler, "");
+#ifdef PC
+    m.def("test_PcMessageHandler" , &test::test_PcMessageHandler, "");
+#endif
 }

@@ -55,7 +55,7 @@ namespace mpi
 
     protected: // member class
 
-    private: // data
+    protected: // data
         std::vector<MessageData*> sendMessages_; // one entry for each message to send using this MessageHandler's messageItemList_
         std::vector<MessageData*> recvMessages_; // one entry for each message to receive using this MessageHandler's messageItemList_
 
