@@ -112,7 +112,7 @@ namespace test
         prdbg("-*# test_PcMessageHandler() #*-");
 
         ParticleContainer pc(8);
-        pc.prdbg();
+        prdbg(pc.info());
 
         PcMessageHandler hndlr(pc);
 
@@ -123,9 +123,11 @@ namespace test
 
             MessageHeader::broadcastMessageHeaders();
             hndlr.sendMessages();
+//            MPI_Barrier(MPI_COMM_WORLD);
             hndlr.recvMessages();
 
         }
+        prdbg(pc.info());
         finalize();
         return true;
     }

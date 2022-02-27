@@ -22,21 +22,16 @@ namespace mpacts
     }
 
  //---------------------------------------------------------------------------------------------------------------------
-    void
-    ParticleContainer::
-    prdbg()
+    INFO_DEF(ParticleContainer)
     {
         std::stringstream ss;
-        mpi::Lines_t lines;
-
-        lines.push_back("a=alive[i], i=particle index, r=position[i], m=mass[i]");
-        lines.push_back( ::tostr( "a", std::setw(4), "i", std::setw(4), "r", std::setw(4), "m" ) );
-
-        int size = alive_.size();
-        for( int i=0; i<size; ++i) {
-            lines.push_back( ::tostr( alive_[i], std::setw(4), i, std::setw(4), r[i], std::setw(4), m[i] ) );
+        ss<<indent<<"ParticleContainer::info("<<title<<") : size="<<alive_.size()
+          <<indent<<"  a=alive[i], i=particle index, r=position[i], m=mass[i]"
+          <<indent<<"  a"<<std::setw(4)<<"i"<<std::setw(4)<<"r"<<std::setw(4)<<"m";
+        for( int i=0; i<alive_.size(); ++i) {
+            ss<<indent<<"  "<<alive_[i]<<std::setw(4)<<i<<std::setw(4)<<r[i]<<std::setw(4)<<m[i];
         }
-        ::prdbg( tostr("ParticleContainer(size=", size, ")"), lines );
+        return ss.str();
     }
 
  //---------------------------------------------------------------------------------------------------------------------

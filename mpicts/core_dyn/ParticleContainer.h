@@ -40,7 +40,7 @@ namespace mpacts
 
         ParticleContainer(int size);
 
-        void prdbg();
+        INFO_DECL;
 
         inline
         size_t // the size of a particle container.
@@ -80,9 +80,15 @@ namespace mpi
            // The receivers adds the particles
     , copy // Copy particles: the selected particles are not destroyed in the sender after sending.
            // The receivers adds the particles
+  // todo: extend move/copy to move/copy/set
   //, set  // Overwrite particles at the receiving end. The sender sends a list of particle ids.
+           // the MenuItemList is different ?? maybe we need a different PcMessageHandler
+           // alternatively, we can send the mode as part of the MenuItem<ParticleContainer>
+           // as well as the list of indices if mode==set
+
+    , add // move or copy on the receiving end.
     };
- // todo: extend move/copy to move/copy/set
+
  // The receiver translates the IDs to the corresponding particle indices and overwrites
  // the received arrays with the received array values for the selection.
 
@@ -93,6 +99,7 @@ namespace mpi
             case move: return "Move : selected particles are moved from sender to receiver.";
             case copy: return "Copy : selected particles are copied from sender to receiver.";
          // case set : return "set : selected particles are overwritten at the receiving end.";
+            case add : return "add : move or copy on the receiving end.";
             default:
                 assert(false && "Unknwown mode");
         }
@@ -123,7 +130,9 @@ namespace mpi
           , size_t i // location in MessageHeaderContainer for MPI rank src
           )
           : MessageData(src, i)
-        {}
+          , mode_(add)
+        {
+        }
 
         Mode mode() const { return mode_; }
         Mode mode()       { return mode_; }
