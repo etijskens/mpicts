@@ -3,9 +3,10 @@
 namespace mpacts
 {//---------------------------------------------------------------------------------------------------------------------
     ParticleContainer::
-    ParticleContainer(int size)
+    ParticleContainer(int size, std::string const& name)
       : r("r", *this)
       , m("m", *this)
+      , name_(name)
     {
         alive_.resize(size);
         r.resize(size);
@@ -25,7 +26,7 @@ namespace mpacts
     INFO_DEF(ParticleContainer)
     {
         std::stringstream ss;
-        ss<<indent<<"ParticleContainer::info("<<title<<") : size="<<alive_.size()
+        ss<<indent<<"ParticleContainer::info("<<title<<") : name="<<name()<<", size="<<alive_.size()
           <<indent<<"  a=alive[i], i=particle index, r=position[i], m=mass[i]"
           <<indent<<"  a"<<std::setw(4)<<"i"<<std::setw(4)<<"r"<<std::setw(4)<<"m";
         for( int i=0; i<alive_.size(); ++i) {

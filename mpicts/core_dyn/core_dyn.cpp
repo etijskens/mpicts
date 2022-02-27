@@ -111,7 +111,7 @@ namespace test
               );
         prdbg("-*# test_PcMessageHandler() #*-");
 
-        ParticleContainer pc(8);
+        ParticleContainer pc(8, "PC");
         prdbg(pc.info());
 
         PcMessageHandler hndlr(pc);

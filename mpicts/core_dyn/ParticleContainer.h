@@ -25,6 +25,13 @@ namespace mpacts
         {}
         std::string const& name() const { return name_; }
         std::string const& particleContainer() const { return pc_; }
+
+        INFO_DECL
+        {
+            std::stringstream ss;
+            ss<<indent<<"ParticleArray<"<<typeid(T).name()<<">::info("<<title<<") : name="<<name()<<", pc="<<particleContainer().name();
+            return ss.str();
+        }
     };
 
  //---------------------------------------------------------------------------------------------------------------------
@@ -33,12 +40,13 @@ namespace mpacts
     {
         static bool const _debug_ = false;
         std::vector<bool> alive_;
+        std::string name_;
     public:
         ParticleArray<real_t> r;
         ParticleArray<real_t> m;
 //        std::vector<vec_t>   x;
 
-        ParticleContainer(int size);
+        ParticleContainer( int size, std::string const& name);
 
         INFO_DECL;
 
@@ -64,6 +72,8 @@ namespace mpacts
         inline bool is_alive(int i) const {
             return alive_[i];
         }
+
+        std::string const& name() const { return name_; }
     };
 }// namespace mpacts
 
@@ -281,9 +291,12 @@ namespace mpi
             return nBytes;
         }
 
+        ParticleContainer const& particleContainer() const { return *ptr_pc_; }
+
         virtual INFO_DECL
         {
             std::stringstream ss;
+            ss<<indent<<"MessageItem<ParticleContainer>::info("<<title<<") : pc="<<ptr_pc_->name()<<", size="<<ptr_pc_->size();
             return ss.str();
         }
    };
@@ -366,9 +379,13 @@ namespace mpi
 
             return pPcMessageData->indices().size() * sizeof(T);
         }
-        virtual INFO_DECL
+
+        virtual
+        INFO_DECL
         {
             std::stringstream ss;
+            ss<<indent<<"MessageItem<ParticleArray<"<<typeid(T).name()<<">>::info("<<title<<") : name="<<ptr_pa_->name()
+                      <<", pc="<<ptr_pc_message_item_->particleContainer().name();
             return ss.str();
         }
     };
