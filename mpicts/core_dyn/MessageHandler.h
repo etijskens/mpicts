@@ -48,10 +48,10 @@ namespace mpi
     public:
         using key_type = MessageHandlerRegistry::key_type;
         static MessageHandlerRegistry theMessageHandlerRegistry;
-    private:
-        friend class MessageHandlerRegistry;
 
         static bool const _debug_ = true;
+
+        friend class MessageHandlerRegistry;
 
     protected: // member class
 

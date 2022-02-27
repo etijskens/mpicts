@@ -77,16 +77,16 @@ namespace mpi
  // Operation mode for ParticleContainer Messages
  //-------------------------------------------------------------------------------------------------
     { move // Move particles: the selected particles are destroyed in the sender after sending.
-           // The receivers adds the particles
+           // The receivers adds the particles.
     , copy // Copy particles: the selected particles are not destroyed in the sender after sending.
-           // The receivers adds the particles
+           // The receiver adds the particles.
+    , add // move or copy on the receiving end.
   // todo: extend move/copy to move/copy/set
-  //, set  // Overwrite particles at the receiving end. The sender sends a list of particle ids.
+    , set  // Overwrite particles at the receiving end. The sender sends a list of particle ids.
            // the MenuItemList is different ?? maybe we need a different PcMessageHandler
            // alternatively, we can send the mode as part of the MenuItem<ParticleContainer>
            // as well as the list of indices if mode==set
-
-    , add // move or copy on the receiving end.
+    , none
     };
 
  // The receiver translates the IDs to the corresponding particle indices and overwrites
@@ -98,8 +98,9 @@ namespace mpi
         switch(mode) {
             case move: return "Move : selected particles are moved from sender to receiver.";
             case copy: return "Copy : selected particles are copied from sender to receiver.";
-         // case set : return "set : selected particles are overwritten at the receiving end.";
             case add : return "add : move or copy on the receiving end.";
+            case set : return "set : selected particles are overwritten at the receiving end.";
+            case none: return "none";
             default:
                 assert(false && "Unknwown mode");
         }
@@ -130,12 +131,11 @@ namespace mpi
           , size_t i // location in MessageHeaderContainer for MPI rank src
           )
           : MessageData(src, i)
-          , mode_(add)
-        {
-        }
+          , mode_(none)
+        {}
 
-        Mode mode() const { return mode_; }
-        Mode mode()       { return mode_; }
+        Mode  mode() const { return mode_; }
+        Mode& mode()       { return mode_; }
         Indices_t const& indices() const { return indices_; }
         Indices_t      & indices()       { return indices_; }
 
@@ -180,17 +180,38 @@ namespace mpi
        {
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
             if constexpr(::mpi::_debug_ && _debug_) {
-                Lines_t lines = tolines("indices ", pPcMessageData->indices());
-                lines.push_back( tostr("mode = ", str(pPcMessageData->mode())) );
-                prdbg( tostr("MessageItem<ParticleContainer>::write(ptr)"), lines );
+                prdbg( tostr( "MessageItem<ParticleContainer>::write(): entering"
+                            , pPcMessageData->info()
+                ));
             }
 
             size_t nParticles = pPcMessageData->indices().size();
             ::mpi::write( nParticles, pos );
+            ::mpi::write( pPcMessageData->mode(), pos );
+            if constexpr(::mpi::_debug_ && _debug_) {
+                prdbg( tostr( "MessageItem<ParticleContainer>::write(): indices.size(), mode written" ));
+            }
+
+            if( pPcMessageData->mode() == set )
+            {// also write the indices
+             // TODO: We ought to write particle IDs, which on the receiving end must be translated back into indices.
+                ::mpi::write( pPcMessageData->indices(), pos );
+
+                if constexpr(::mpi::_debug_ && _debug_) {
+                    prdbg( tostr( "MessageItem<ParticleContainer>::write(): indices written" ));
+                }
+            }
+
             if( pPcMessageData->mode() == move )
             {// Remove the particles from the ParticleContainer
                 for( auto index : pPcMessageData->indices() )
                     ptr_pc_->remove(index);
+                if constexpr(::mpi::_debug_ && _debug_) {
+                    prdbg( tostr( "MessageItem<ParticleContainer>::write(): selection removed in sender" ));
+                }
+            }
+            if constexpr(::mpi::_debug_ && _debug_) {
+                prdbg( tostr( "MessageItem<ParticleContainer>::write(): leaving" ));
             }
         }
 
@@ -203,27 +224,61 @@ namespace mpi
         {
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
 
+            if constexpr(::mpi::_debug_ && _debug_) {
+                prdbg( tostr( "MessageItem<ParticleContainer>::read(): entering"
+                            , pPcMessageData->info()
+                ));
+            }
+
             Index_t n;
             ::mpi::read( n, pos );
-         // create n new particles
-            Indices_t & indices = pPcMessageData->indices();
-            prdbg("ok?");
-            indices.resize(n);
-            for( size_t i = 0; i < n; ++i )
-                indices[i] = ptr_pc_->add();
-
+            ::mpi::read( pPcMessageData->mode(), pos );
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleContainer>::read(ptr)"), tolines("new indices", indices) );
+                prdbg( tostr( "MessageItem<ParticleContainer>::read(): n, mode"
+                            , pPcMessageData->info()
+                ));
             }
+
+            if( pPcMessageData->mode() == set )
+            {// read the IDs of the particles to be overwritten
+                ::mpi::read( pPcMessageData->indices(), pos );
+             // todo: add ID to index translation
+                if constexpr(::mpi::_debug_ && _debug_) {
+                    prdbg( tostr( "MessageItem<ParticleContainer>::read(): selection"
+                                , pPcMessageData->info()
+                    ));
+                }
+            } else
+            {// mode == move|copy
+             // create n new particles
+                Indices_t & indices = pPcMessageData->indices();
+                indices.resize(n);
+                for( size_t i = 0; i < n; ++i )
+                    indices[i] = ptr_pc_->add();
+
+                if constexpr(::mpi::_debug_ && _debug_) {
+                    prdbg( tostr( "MessageItem<ParticleContainer>::read(): particles added"
+                                , pPcMessageData->info()
+                    ));
+                }
+            }
+
         }
 
      // The number of bytes that this MessageItem will occupy in a MessageBuffer. As this MessageItem only conveys
      // the number of particles to be transferred, it is just sizeof()
         virtual size_t computeItemBufferSize
-          ( MessageData const* /*pMessageData*/
+          ( MessageData const* pMessageData
           ) const
         {
-            return sizeof(size_t); // this MessageItem only transfers the number of particles to be transferred
+            PcMessageData const* pPcMessageData = dynamic_cast<PcMessageData const*>(pMessageData);
+
+            size_t nBytes = sizeof(size_t) // the size
+                          + sizeof(Mode);  // the mode
+            if( pPcMessageData->mode() == set ) {
+                nBytes += pPcMessageData->indices().size() * sizeof(Index_t);
+            }
+            return nBytes;
         }
 
         virtual INFO_DECL

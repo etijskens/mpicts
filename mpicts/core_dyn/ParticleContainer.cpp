@@ -98,6 +98,7 @@ namespace mpi
 
         return ss.str();
     }
+
  //---------------------------------------------------------------------------------------------------------------------
  // Implementation of class PcMessageHandler
  //---------------------------------------------------------------------------------------------------------------------
@@ -130,7 +131,9 @@ namespace mpi
     addRecvMessage(int src, size_t i)
     {
         recvMessages_.push_back(new PcMessageData(src, i));
-        prdbg(recvMessages_.back()->info());
+
+        if constexpr( mpi::_debug_ && _debug_ )
+            prdbg(recvMessages_.back()->info());
     }
 
  //---------------------------------------------------------------------------------------------------------------------
