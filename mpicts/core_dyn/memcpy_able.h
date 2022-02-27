@@ -179,7 +179,7 @@ namespace mpi
                         Lines_t lines;
                         lines.push_back( tostr("t = ", t) );
                         lines.push_back( tostr("next src = ", src) );
-                        lines.push_back( tostr("bytes read = ", nBytes) );
+                        lines.push_back( tostr("bytes read = ", nBytes, "\n(done)") );
                         prdbg( tostr("fixed_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines );
                     }
                 }
@@ -216,10 +216,10 @@ namespace mpi
                         Lines_t lines;
                         lines.push_back( tostr("value_type = ", typeid(typename T::value_type).name()) );
                         lines.push_back( tostr("bytes read = ", size, "*", sizeof(typename T::value_type), "=", nBytes) );
-                        lines.push_back( tostr("next src = ", src) );
+                        lines.push_back( tostr("next src = ", src, "\n(done)") );
                         prdbg( tostr("variable_size_memcpy_able<T=", typeid(T).name(), ">::read(t, src)"), lines);
                     }
-}
+                }
                 else
                     static_assert(fixed_size_memcpy_able<T>::value || variable_size_memcpy_able<T>::value, "type T is not memcpy-able");
             }

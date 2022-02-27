@@ -13,6 +13,7 @@ namespace mpi
  // moved or copied.
  //------------------------------------------------------------------------------------------------
     {
+    protected:
         MessageHeader messageHeader_;
         MessageBuffer messageBuffer_;
     public:
@@ -51,7 +52,7 @@ namespace mpi
         void*   bufferPtr()  const { return messageBuffer_.ptr(); }
         size_t  bufferSize() const { return messageBuffer_.size(); } // the size of the buffer, >= the size of the message
 
-        INFO_DECL;
+        virtual INFO_DECL;
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

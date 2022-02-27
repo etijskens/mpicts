@@ -109,10 +109,17 @@ namespace mpi
         for( auto pMessageData : sendMessages_ )
         {// allocate buffer for this message
             pMessageData->allocateBuffer();
-            prdbg(pMessageData->info("\n","sendMessages"));
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): buffer allocated")
+                ));
+            }
 
          // write the message to the buffer
             messageItemList().write(pMessageData);
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): message written to buffer")
+                ));
+            }
 
          // send the message
             if( mpi::size > 1 )
@@ -133,7 +140,19 @@ namespace mpi
              // ParticleContainerMessageHandler sending ghost particles and leaving particles in a separate go.
              // One solution is to select a random tag and put it into the MessageHeader, so that the receiver
              // can pick up the tag there.
-            }
+                if constexpr(mpi::_debug_&&_debug_) {
+                    prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): message sent:")
+                                , "\n  MPI_Isend(\n    "
+                                , pMessageData->bufferPtr(), "\n    "   // pointer to buffer to send
+                                , "nbytes=", pMessageData->size(), "\n    "       // number of Index_t elements to send
+                                , "MPI_CHAR\n    "
+                                , "dst=", pMessageData->dst(), "\n    "        // the destination
+                                , "tag=", pMessageData->key(), "\n    "        // the tag
+                                , "MPI_COMM_WORLD\n    &request"
+                                , "\n  );\n"
+                    ));
+                }
+             }
         }
     }
 
@@ -142,15 +161,33 @@ namespace mpi
     MessageHandler::
     recvMessages() // Read the messages from the receive buffers
     {
-        prdbg( tostr(static_info("\n", "recvMessages()")
-                    )
-             );
+        if constexpr(mpi::_debug_&&_debug_) {
+            prdbg( tostr( static_info("\n", "MessageHandler::recvMessages() entering")
+            ));
+        }
+
         for( auto pMessageData : recvMessages_ )
         {// allocate buffer for this message
-            prdbg(pMessageData->info("\n","recvMessages"));
             pMessageData->allocateBuffer();
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() buffer allocated")
+                ));
+            }
 
          // Receive the message
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() receiving message ")
+                             , "\n  MPI_Recv("
+                             , "\n    ", pMessageData->bufferPtr() // pointer to buffer where to store the message
+                             , "\n    nBytes=", pMessageData->size()      // number of elements to receive
+                             , "\n    MPI_CHAR"
+                             , "\n    src=", pMessageData->src()       // source rank
+                             , "\n    tag=", pMessageData->key()       // tag
+                             , "\n    MPI_COMM_WORLD"
+                             , "\n    MPI_STATUS_IGNORE"
+                             , "\n  );"
+                ));
+            }
             int succes =
             MPI_Recv
               ( pMessageData->bufferPtr() // pointer to buffer where to store the message
@@ -163,7 +200,15 @@ namespace mpi
               );
 
          // read the message from the buffer
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() reading message from buffer")
+                ));
+            }
             messageItemList().read(pMessageData);
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() done")
+                ));
+            }
         }
     }
 

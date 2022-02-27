@@ -78,8 +78,8 @@ namespace mpi
         STATIC_INFO_DECL;
 
      // High level member functions for MessageBuffer manipulation
-        void addSendMessage(int destination);
-        void addRecvMessage(int src, size_t i);
+        virtual void addSendMessage(int destination);
+        virtual void addRecvMessage(int src, size_t i);
 
         inline size_t nSendMessages() const { return sendMessages_.size(); }
         inline size_t nRecvMessages() const { return recvMessages_.size(); }

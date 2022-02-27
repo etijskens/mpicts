@@ -85,6 +85,25 @@ namespace mpacts
 
 namespace mpi
 {//---------------------------------------------------------------------------------------------------------------------
+ // Implementation of class PcMessageData
+ //---------------------------------------------------------------------------------------------------------------------
+    INFO_DEF(PcMessageData)
+    {
+        std::stringstream ss;
+
+        ss<<indent<<"PcMessageData.info("<<title<<") :"
+                  <<MessageData::info(indent +"  ")
+//                  <<messageHeader_.info(indent + "  ")
+//                  <<messageBuffer_.info(indent + "  ")
+          <<indent<<"  "<<"indices=[size="<<indices().size()<<"][ "
+                  ;
+        for( auto index : indices() ) ss<<index<<" ";
+        ss<<"]"
+          <<indent<<"  "<<"mode="<<str(mode());
+
+        return ss.str();
+    }
+ //---------------------------------------------------------------------------------------------------------------------
  // Implementation of class PcMessageHandler
  //---------------------------------------------------------------------------------------------------------------------
     PcMessageHandler::
@@ -109,6 +128,14 @@ namespace mpi
       )
     {
         sendMessages_.push_back(new PcMessageData( mpi::rank, destination, this->key_, selection, mode ));
+    }
+
+    void
+    PcMessageHandler::
+    addRecvMessage(int src, size_t i)
+    {
+        recvMessages_.push_back(new PcMessageData(src, i));
+        prdbg(recvMessages_.back()->info());
     }
 
  //---------------------------------------------------------------------------------------------------------------------

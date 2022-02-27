@@ -114,12 +114,17 @@ namespace test
         ParticleContainer pc(8);
         pc.prdbg();
 
-        PcMessageHandler pcmh(pc);
+        PcMessageHandler hndlr(pc);
 
-        int dst = mpi::next_rank();
-        Indices_t indices = {1,3,5,7};
-        pcmh.addSendMessage(dst, indices, move);
         {
+            int dst = mpi::next_rank();
+            Indices_t indices = {1,3,5,7};
+            hndlr.addSendMessage(dst, indices, move);
+
+            MessageHeader::broadcastMessageHeaders();
+            hndlr.sendMessages();
+            hndlr.recvMessages();
+
         }
         finalize();
         return true;

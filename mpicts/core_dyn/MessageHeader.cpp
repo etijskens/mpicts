@@ -148,6 +148,9 @@ namespace mpi
     MessageHeader::
     broadcastMessageHeaders()
     {
+        if constexpr(mpi::_debug_&&_debug_) {
+            prdbg("MessageHeader::broadcastMessageHeaders(): entering");
+        }
      // Before the MessageHeaders can be broadcasted, the buffer sizes must be computed and stored in the
      // MessageHeaders!
         MessageHeaderContainer& myHeaders = theHeaders[mpi::rank];
@@ -157,6 +160,11 @@ namespace mpi
             MessageHandler& hndlr = MessageHandler::theMessageHandlerRegistry[messageHeaderData.key];
             hndlr.computeMessageBufferSizes();
         }
+        if constexpr(mpi::_debug_&&_debug_) {
+            prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): buffers allocated"
+                       , static_info()
+            ));
+        }
 
         if( mpi::size > 1)
         {// Make sure that every MPI rank knows how many messages the other ranks are sending
@@ -164,6 +172,15 @@ namespace mpi
             nMessagesInRank[mpi::rank] = theHeaders[mpi::rank].size();
             for( int source = 0; source < mpi::size; ++source ) {
                 MPI_Bcast(&nMessagesInRank[source], 1, MPI_SIZE_T, source, MPI_COMM_WORLD);
+            }
+            if constexpr(mpi::_debug_&&_debug_) {
+                std::stringstream ss;
+                ss<<"MessageHeader::broadcastMessageHeaders(): nMessagesInRank = [";
+                for( int source = 0; source < mpi::size; ++source ) ss<<" "<<nMessagesInRank[source];
+                ss<<" ]";
+                prdbg(tostr( ss.str()
+                           , static_info()
+                ));
             }
 
          // Adjust the size of the header section for the other ranks according to nMessagesInRank,
@@ -176,16 +193,30 @@ namespace mpi
 
          // Broadcast the header sections of all processes
             for( int source = 0; source < mpi::size; ++source ) {
+                if constexpr(mpi::_debug_&&_debug_) {
+                    prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): \nMPI_Bcast(\n    "
+                               , &(theHeaders[source][0]), "\n    "
+                               , theHeaders[source].size(), "*", sizeof(MessageHeaderData), "\n    "
+                               , "MPI_CHAR\n    "
+                               , "rank=", source, "\n    "
+                               , "MPI_COMM_WORLD\n)"
+                    ));
+                }
                 MPI_Bcast
-                ( &(theHeaders[source][0])
-                , theHeaders[source].size() * sizeof(MessageHeaderData) // # of bytes
-                , MPI_CHAR
-                , source
-                , MPI_COMM_WORLD
-                );
+                  ( &(theHeaders[source][0])
+                  , theHeaders[source].size() * sizeof(MessageHeaderData) // # of bytes
+                  , MPI_CHAR
+                  , source
+                  , MPI_COMM_WORLD
+                  );
+            }
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): \n"
+                           , static_info()
+                ));
             }
 
-         // loop over all messages and create MessageData for each message to receive
+         // loop over all messages and create MessageData for each message to be received
             for( int src = 0; src < mpi::size; ++src ) {// loop over all senders
                 if( src != mpi::rank ) {// we are not sending to / receiving from ourselve
                     MessageHeaderContainer& srcHeaders = theHeaders[src];
@@ -199,7 +230,7 @@ namespace mpi
                 }
             }
             if constexpr(::mpi::_debug_ && _debug_)
-                prdbg(MessageHandler::static_info("\n","broadcastMessageHeaders end"));
+                prdbg(MessageHandler::static_info("\n","broadcastMessageHeaders done"));
         }
     }
  //------------------------------------------------------------------------------------------------

@@ -129,6 +129,8 @@ namespace mpi
         Mode mode()       { return mode_; }
         Indices_t const& indices() const { return indices_; }
         Indices_t      & indices()       { return indices_; }
+
+        virtual INFO_DECL;
     };
 
  //------------------------------------------------------------------------------------------------
@@ -196,6 +198,7 @@ namespace mpi
             ::mpi::read( n, pos );
          // create n new particles
             Indices_t & indices = pPcMessageData->indices();
+            prdbg("ok?");
             indices.resize(n);
             for( size_t i = 0; i < n; ++i )
                 indices[i] = ptr_pc_->add();
@@ -318,12 +321,16 @@ namespace mpi
      // ctor
         PcMessageHandler(ParticleContainer& pc);
 
+        virtual
         void
         addSendMessage
           ( int destination             // destination MPI rank
           , Indices_t const & selection // List of selected particles
           , Mode mode                   // Operation mode
           );
+
+        virtual
+        void addRecvMessage(int src, size_t i);
     };
 
  //-------------------------------------------------------------------------------------------------
