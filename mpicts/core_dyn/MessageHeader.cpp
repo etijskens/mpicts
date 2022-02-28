@@ -63,7 +63,7 @@ namespace mpi
         ss<<indent<<"MessageHeaderContainer::info("<<title<<") :";
         if(headers_.size()) {
             for( size_t i=0; i < headers_.size(); ++i ){
-                ss<<headers_[i].info( indent + "  ", tostr("header ", i, " of ", headers_.size()) );
+                ss<<headers_[i].info( indent + "  ", concatenate("header ", i, " of ", headers_.size()) );
             }
         } else {
             ss<<indent<<"  ( empty )";
@@ -122,7 +122,7 @@ namespace mpi
                   <<" ) ";
         if( theHeaders.size() ) {
             for( int rnk = 0; rnk < theHeaders.size(); ++rnk ) {
-                ss<<theHeaders[rnk].info( indent + "  ", tostr("rank ", rnk, " of ", theHeaders.size()) );
+                ss<<theHeaders[rnk].info( indent + "  ", concatenate("rank ", rnk, " of ", theHeaders.size()) );
             }
         } else {
             ss<<"( empty )";
@@ -161,7 +161,7 @@ namespace mpi
             hndlr.computeMessageBufferSizes();
         }
         if constexpr(mpi::_debug_&&_debug_) {
-            prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): buffers allocated"
+            prdbg(concatenate( "MessageHeader::broadcastMessageHeaders(): buffers allocated"
                        , static_info()
             ));
         }
@@ -178,7 +178,7 @@ namespace mpi
                 ss<<"MessageHeader::broadcastMessageHeaders(): nMessagesInRank = [";
                 for( int source = 0; source < mpi::size; ++source ) ss<<" "<<nMessagesInRank[source];
                 ss<<" ]";
-                prdbg(tostr( ss.str()
+                prdbg(concatenate( ss.str()
                            , static_info()
                 ));
             }
@@ -194,7 +194,7 @@ namespace mpi
          // Broadcast the header sections of all processes
             for( int source = 0; source < mpi::size; ++source ) {
                 if constexpr(mpi::_debug_&&_debug_) {
-                    prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): \nMPI_Bcast(\n    "
+                    prdbg(concatenate( "MessageHeader::broadcastMessageHeaders(): \nMPI_Bcast(\n    "
                                , &(theHeaders[source][0]), "\n    "
                                , theHeaders[source].size(), "*", sizeof(MessageHeaderData), "\n    "
                                , "MPI_CHAR\n    "
@@ -211,7 +211,7 @@ namespace mpi
                   );
             }
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg(tostr( "MessageHeader::broadcastMessageHeaders(): \n"
+                prdbg(concatenate( "MessageHeader::broadcastMessageHeaders(): \n"
                            , static_info()
                 ));
             }
@@ -222,7 +222,7 @@ namespace mpi
                     MessageHeaderContainer& srcHeaders = theHeaders[src];
                     for( size_t i = 0; i < srcHeaders.size(); ++i ) {// loop over all message from src
                         if( srcHeaders[i].dst == mpi::rank ) {// this is a message for me
-                            prdbg(tostr(mpi::rank, " receiving from ", src, " i=", i));
+                            prdbg(concatenate(mpi::rank, " receiving from ", src, " i=", i));
                             MessageHandler& hndlr = MessageHandler::theMessageHandlerRegistry[srcHeaders[i].key];
                             hndlr.addRecvMessage(src, i);
                         }

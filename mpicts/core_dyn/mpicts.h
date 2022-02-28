@@ -66,14 +66,17 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
     }
 
  //---------------------------------------------------------------------------------------------------------------------
- // Machinery for producing debugging output
+ // Machinery for producing debugging informaton
  //---------------------------------------------------------------------------------------------------------------------
     extern std::string dbg_fname;
     extern const Lines_t nolines;
     extern int64_t timestamp0;
 
- // Produce debug output (in file `_<rank>.dbg`). Writes a
- // - timestamp
+ //---------------------------------------------------------------------------------------------------------------------
+ // Produce debug output (in file `_<rank>.dbg`). As the order of output in MPI proceses is subject to randomness,
+ // prdbg writes to a distinct file per process. The order in the file is not subject to randomness.
+ // Writes a
+ // - timestamp (not necessarily fine grained enough to compare the time of output across different processes
  // - a <title> string
  // - optionally some <lines>
  // - a terminating line (dashes)
@@ -87,7 +90,7 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
  // Write <last> to the stringstream <ss>
     template<typename Last>
     void
-    tostrhelper
+    concatenate_helper_
       ( std::stringstream & ss
       , Last const& last
       )
@@ -98,14 +101,14 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
  // Write a variable number of arguments to the stringstream <ss>
     template<typename First, typename... Args>
     void
-    tostrhelper
+    concatenate_helper_
       ( std::stringstream & ss
       , First const& first     // first argument to write to <ss>
       , Args... args           // remaining arguments to write to <ss>
       )
     {
         ss<<first;
-        tostrhelper(ss, args...);
+        concatenate_helper_(ss, args...);
     }
 
  // Produce a std::string from a series of arguments. Internally, the arguments are consecutively fed into a
@@ -114,15 +117,20 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
  // second argument.
     template<typename... Args>
     std::string
-    tostr(Args... args)
+    concatenate(Args... args)
     {
         std::stringstream ss;
-        tostrhelper(ss, args...);
+        concatenate_helper_(ss, args...);
         return ss.str();
     }
 
+ // write each element of a std::vector to a line
     template<typename T>
-    Lines_t tolines( std::string const& s, std::vector<T> const & v)
+    Lines_t
+    tolines
+      ( std::string const& s     // title, description of the std::vector
+      , std::vector<T> const & v // the std::vector
+      )
     {
         Lines_t lines;
         std::stringstream ss;
@@ -135,19 +143,66 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
         return lines;
     }
 
+ // write a selection of elements of a std::vector to a line
     template<typename T>
-    Lines_t tolines( std::string const& s, std::vector<T> const & v, Indices_t indices)
+    Lines_t
+    tolines( std::string const& s, std::vector<T> const & v, Indices_t selection)
     {
         Lines_t lines;
-        lines.push_back( tostr(s, "(size=", v.size(), ") [") );
-        for( auto index : indices ) {
-            lines.push_back( tostr(std::setw(6), index, std::setw(20), v[index]) );
+        lines.push_back( concatenate(s, "(size=", v.size(), ") [") );
+        for( auto index : selection ) {
+            lines.push_back( concatenate(std::setw(6), index, std::setw(20), v[index]) );
         }   lines.push_back("]");
         return lines;
     }
  //---------------------------------------------------------------------------------------------------------------------
 }// namespace mpi
 
+//---------------------------------------------------------------------------------------------------------------------
+// Most classes have an info(...) method that returns a std::string describing the state of the object.
+// This is most practical for printing debug information.
+// The indent argument typically contains the newline character and a number of spaces for indentation.
+// The title argument is generally used to identify the code location where the string is created.
+// The declaration and definition of the info member function is facilitated using two macros INFO_DECl
+// and INFO_DEF.
+//
+#define INFO_DECL                                       \
+    std::string                                         \
+    info                                                \
+      ( std::string const& indent = std::string("\n")   \
+      , std::string const& title = std::string()        \
+      ) const
+// INFO_DECL is to be used in a class declaration in a header file as
+//      class MyClass
+//      {
+//          ...
+//          INFO_DECL;
+//      };
+// The member function definition can use the INFO_DEF macro. Alternatively, the member function can be defined
+// inside the class declaration:
+//      class MyClass
+//      {
+//          ...
+//          INFO_DECL
+//          {   std::stringstream ss;
+//              ss<<indent<<"MyClass.info("<<title<<") :"
+//                <<indent<<"  "<< ...
+//                ;
+//              return ss.str();
+//          }
+//      };
+// To define the info member function in a source file, it can use the INFO_DEF macro, followed by the body of
+// member function as above.
+#define INFO_DEF(classname)         \
+    std::string                     \
+    classname::                     \
+    info                            \
+      ( std::string const& indent   \
+      , std::string const& title    \
+      ) const
+
+ //---------------------------------------------------------------------------------------------------------------------
+ // Some classes also have static members. To
 #define STATIC_INFO_DECL                               \
     static                                             \
     std::string                                        \
@@ -163,25 +218,12 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
       ( std::string const& indent   \
       , std::string const& title    \
       )
-
-#define INFO_DECL                                       \
-    std::string                                         \
-    info                                                \
-      ( std::string const& indent = std::string("\n")   \
-      , std::string const& title = std::string()        \
-      ) const
-
-#define INFO_DEF(classname)         \
-    std::string                     \
-    classname::                     \
-    info                            \
-      ( std::string const& indent   \
-      , std::string const& title    \
-      ) const
+ //---------------------------------------------------------------------------------------------------------------------
 
 #include <stdint.h>
 #include <limits.h>
 
+//
 #if SIZE_MAX == UCHAR_MAX
    #define MPI_SIZE_T MPI_UNSIGNED_CHAR
 #elif SIZE_MAX == USHRT_MAX

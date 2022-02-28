@@ -175,7 +175,7 @@ namespace mpi
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~MessageItem<ParticleContainer>()"));
+                prdbg(concatenate("~MessageItem<ParticleContainer>()"));
             }
         }
 
@@ -190,7 +190,7 @@ namespace mpi
        {
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr( "MessageItem<ParticleContainer>::write(): entering"
+                prdbg( concatenate( "MessageItem<ParticleContainer>::write(): entering"
                             , pPcMessageData->info()
                 ));
             }
@@ -199,7 +199,7 @@ namespace mpi
             ::mpi::write( nParticles, pos );
             ::mpi::write( pPcMessageData->mode(), pos );
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr( "MessageItem<ParticleContainer>::write(): indices.size(), mode written" ));
+                prdbg( concatenate( "MessageItem<ParticleContainer>::write(): indices.size(), mode written" ));
             }
 
             if( pPcMessageData->mode() == set )
@@ -208,7 +208,7 @@ namespace mpi
                 ::mpi::write( pPcMessageData->indices(), pos );
 
                 if constexpr(::mpi::_debug_ && _debug_) {
-                    prdbg( tostr( "MessageItem<ParticleContainer>::write(): indices written" ));
+                    prdbg( concatenate( "MessageItem<ParticleContainer>::write(): indices written" ));
                 }
             }
 
@@ -217,11 +217,11 @@ namespace mpi
                 for( auto index : pPcMessageData->indices() )
                     ptr_pc_->remove(index);
                 if constexpr(::mpi::_debug_ && _debug_) {
-                    prdbg( tostr( "MessageItem<ParticleContainer>::write(): selection removed in sender" ));
+                    prdbg( concatenate( "MessageItem<ParticleContainer>::write(): selection removed in sender" ));
                 }
             }
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr( "MessageItem<ParticleContainer>::write(): leaving" ));
+                prdbg( concatenate( "MessageItem<ParticleContainer>::write(): leaving" ));
             }
         }
 
@@ -235,7 +235,7 @@ namespace mpi
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
 
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr( "MessageItem<ParticleContainer>::read(): entering"
+                prdbg( concatenate( "MessageItem<ParticleContainer>::read(): entering"
                             , pPcMessageData->info()
                 ));
             }
@@ -244,7 +244,7 @@ namespace mpi
             ::mpi::read( n, pos );
             ::mpi::read( pPcMessageData->mode(), pos );
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr( "MessageItem<ParticleContainer>::read(): n, mode"
+                prdbg( concatenate( "MessageItem<ParticleContainer>::read(): n, mode"
                             , pPcMessageData->info()
                 ));
             }
@@ -254,7 +254,7 @@ namespace mpi
                 ::mpi::read( pPcMessageData->indices(), pos );
              // todo: add ID to index translation
                 if constexpr(::mpi::_debug_ && _debug_) {
-                    prdbg( tostr( "MessageItem<ParticleContainer>::read(): selection"
+                    prdbg( concatenate( "MessageItem<ParticleContainer>::read(): selection"
                                 , pPcMessageData->info()
                     ));
                 }
@@ -267,7 +267,7 @@ namespace mpi
                     indices[i] = ptr_pc_->add();
 
                 if constexpr(::mpi::_debug_ && _debug_) {
-                    prdbg( tostr( "MessageItem<ParticleContainer>::read(): particles added"
+                    prdbg( concatenate( "MessageItem<ParticleContainer>::read(): particles added"
                                 , pPcMessageData->info()
                     ));
                 }
@@ -327,7 +327,7 @@ namespace mpi
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg(tostr("~MessageItem<ParticleArray<T=", typeid(T).name(), ">>()"));
+                prdbg(concatenate("~MessageItem<ParticleArray<T=", typeid(T).name(), ">>()"));
             }
         }
 
@@ -342,7 +342,7 @@ namespace mpi
             PcMessageData* pPcMessageData = dynamic_cast<PcMessageData*>(pMessageData);
 
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::write(ptr)")
+                prdbg( concatenate("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::write(ptr)")
                      , tolines(ptr_pa_->name(), *ptr_pa_, pPcMessageData->indices() )
                      );
             }
@@ -364,7 +364,7 @@ namespace mpi
                 ::mpi::read( (*ptr_pa_)[index], pos );
 
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::read(ptr)")
+                prdbg( concatenate("MessageItem<ParticleArray<T=", typeid(T).name(), ">>::read(ptr)")
                      , tolines(ptr_pa_->name(), *ptr_pa_, pPcMessageData->indices() )
                      );
             }

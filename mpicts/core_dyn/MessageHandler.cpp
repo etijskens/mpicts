@@ -59,7 +59,7 @@ namespace mpi
         for( auto pMessageData : sendMessages_ )
         {
             if( pMessageData ) {
-                if constexpr(::mpi::_debug_ && _debug_) prdbg(tostr("delete pMessageData=", pMessageData));
+                if constexpr(::mpi::_debug_ && _debug_) prdbg(concatenate("delete pMessageData=", pMessageData));
                 delete pMessageData;
             } else {
                 if constexpr(::mpi::_debug_ && _debug_) prdbg("pMessageData == nullptr");
@@ -110,14 +110,14 @@ namespace mpi
         {// allocate buffer for this message
             pMessageData->allocateBuffer();
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): buffer allocated")
+                prdbg( concatenate( pMessageData->info("\n","MessageHandler::sendMessages(): buffer allocated")
                 ));
             }
 
          // write the message to the buffer
             messageItemList().write(pMessageData);
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): message written to buffer")
+                prdbg( concatenate( pMessageData->info("\n","MessageHandler::sendMessages(): message written to buffer")
                 ));
             }
 
@@ -141,7 +141,7 @@ namespace mpi
              // One solution is to select a random tag and put it into the MessageHeader, so that the receiver
              // can pick up the tag there.
                 if constexpr(mpi::_debug_&&_debug_) {
-                    prdbg( tostr( pMessageData->info("\n","MessageHandler::sendMessages(): message sent:")
+                    prdbg( concatenate( pMessageData->info("\n","MessageHandler::sendMessages(): message sent:")
                                 , "\n  MPI_Isend(\n    "
                                 , pMessageData->bufferPtr(), "\n    "   // pointer to buffer to send
                                 , "nbytes=", pMessageData->size(), "\n    "       // number of Index_t elements to send
@@ -162,7 +162,7 @@ namespace mpi
     recvMessages() // Read the messages from the receive buffers
     {
         if constexpr(mpi::_debug_&&_debug_) {
-            prdbg( tostr( static_info("\n", "MessageHandler::recvMessages() entering")
+            prdbg( concatenate( static_info("\n", "MessageHandler::recvMessages() entering")
             ));
         }
 
@@ -170,13 +170,13 @@ namespace mpi
         {// allocate buffer for this message
             pMessageData->allocateBuffer();
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() buffer allocated")
+                prdbg( concatenate( pMessageData->info("\n", "MessageHandler::recvMessages() buffer allocated")
                 ));
             }
 
          // Receive the message
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() receiving message ")
+                prdbg( concatenate( pMessageData->info("\n", "MessageHandler::recvMessages() receiving message ")
                              , "\n  MPI_Recv("
                              , "\n    ", pMessageData->bufferPtr() // pointer to buffer where to store the message
                              , "\n    nBytes=", pMessageData->size()      // number of elements to receive
@@ -201,12 +201,12 @@ namespace mpi
 
          // read the message from the buffer
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() reading message from buffer")
+                prdbg( concatenate( pMessageData->info("\n", "MessageHandler::recvMessages() reading message from buffer")
                 ));
             }
             messageItemList().read(pMessageData);
             if constexpr(mpi::_debug_&&_debug_) {
-                prdbg( tostr( pMessageData->info("\n", "MessageHandler::recvMessages() done")
+                prdbg( concatenate( pMessageData->info("\n", "MessageHandler::recvMessages() done")
                 ));
             }
         }
@@ -250,7 +250,7 @@ namespace mpi
           <<indent<<"  sendMessages_ :";
         if( sendMessages_.size()) {
             for( size_t m = 0; m < sendMessages_.size(); ++m ) {
-                ss<<sendMessages_[m]->info(indent + "    ", tostr("message ", m, " of ",sendMessages_.size()));
+                ss<<sendMessages_[m]->info(indent + "    ", concatenate("message ", m, " of ",sendMessages_.size()));
             }
         } else {
             ss<<indent<<"    ( empty )";
@@ -259,7 +259,7 @@ namespace mpi
         ss<<indent<<"  recvMessages_ :";
         if( recvMessages_.size()) {
             for( size_t m = 0; m < recvMessages_.size(); ++m ) {
-                ss<<recvMessages_[m]->info(indent + "    ", tostr("message ", m, " of ",recvMessages_.size()));
+                ss<<recvMessages_[m]->info(indent + "    ", concatenate("message ", m, " of ",recvMessages_.size()));
             }
         } else {
             ss<<indent<<"    ( empty )";

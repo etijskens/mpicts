@@ -14,7 +14,7 @@ namespace mpi
             ++counter;
         }
         if constexpr(::mpi::_debug_ && _debug_)
-            prdbg(tostr("~MessageItemList() : ", counter, "/", list_.size(), " MessageItems deleted."));
+            prdbg(concatenate("~MessageItemList() : ", counter, "/", list_.size(), " MessageItems deleted."));
     }
 
     void
@@ -82,7 +82,7 @@ namespace mpi
 //        MessageItemBase * const * pBegin = &list_[0];
 //        MessageItemBase * const * pEnd   = pBegin + list_.size();
 //        for( MessageItemBase * const * p = pBegin; p < pEnd; ++p) {
-//            lines.push_back( tostr("MessagaItem ",i++) );
+//            lines.push_back( concatenate("MessagaItem ",i++) );
 //            Lines_t lines_i = (*p)->debug_text();
 //            lines.insert(lines.end(), lines_i.begin(), lines_i.end());
 //        }

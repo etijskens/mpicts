@@ -76,7 +76,7 @@ namespace test
 
             prdbg("before MessageHeader::broadcastMessageHeaders()");
             MessageHeader::broadcastMessageHeaders();
-            prdbg(tostr("after MessageHeader::broadcastMessageHeaders()"
+            prdbg(concatenate("after MessageHeader::broadcastMessageHeaders()"
                        , MessageHeader::static_info()
                        )
                  );
@@ -88,7 +88,7 @@ namespace test
             prdbg(hndlr.info("\n", "*1"));
             prdbg(MessageHandler::static_info());
             prdbg(MessageHeader::static_info());
-            prdbg( tostr( "\na="      , a
+            prdbg( concatenate( "\na="      , a
                         , "\nints[0]=", ints[0]
                         , "\nints[1]=", ints[1]
                         , "\nints[2]=", ints[2]

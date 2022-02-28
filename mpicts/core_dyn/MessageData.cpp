@@ -8,7 +8,7 @@ namespace mpi
     {
         size_t nBytes = messageHeader_.size();
         messageBuffer_.alloc( nBytes );
-//        prdbg(tostr("MessageData::allocateBuffer(", nBytes, ")", info()));
+//        prdbg(concatenate("MessageData::allocateBuffer(", nBytes, ")", info()));
     }
 
 

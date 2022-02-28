@@ -43,7 +43,7 @@ namespace mpi
         ~MessageItem()
         {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr("\n~MessageItem<T=", typeid(T).name(), ">() : this=", this) );
+                prdbg( concatenate("\n~MessageItem<T=", typeid(T).name(), ">() : this=", this) );
             }
         }
 
@@ -51,7 +51,7 @@ namespace mpi
         virtual void write( void*& pos, MessageData* pMessageData ) const
        {
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr(info(), "::write()") );
+                prdbg( concatenate(info(), "::write()") );
             }
             ::mpi::write( *ptrT_, pos );
         }
@@ -62,7 +62,7 @@ namespace mpi
             ::mpi::read( *ptrT_, pos );
 
             if constexpr(::mpi::_debug_ && _debug_) {
-                prdbg( tostr(info(), "::read()") );
+                prdbg( concatenate(info(), "::read()") );
             }
         }
 

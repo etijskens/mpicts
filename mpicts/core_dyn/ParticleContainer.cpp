@@ -74,7 +74,7 @@ namespace mpacts
         }
         alive_[iFree] = true;
         if constexpr(::_debug_ && _debug_)
-            ::prdbg(tostr("ParticleContainer.add() -> ", iFree));
+            ::prdbg(concatenate("ParticleContainer.add() -> ", iFree));
         return iFree;
     }
 }// namespace mpacts
