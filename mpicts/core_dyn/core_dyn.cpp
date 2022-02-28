@@ -22,6 +22,7 @@ namespace py = pybind11;
 #define PC
 #ifdef PC
 #  include "ParticleContainer.cpp"
+#  include "mpacts/ParticleContainer.cpp"
 #endif
 
 using namespace mpi;
