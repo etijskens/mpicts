@@ -37,6 +37,14 @@ namespace mpi
         messageItemList().push_back(pc_.m, ptr_pc_message_item_);
     }
 
+    PcMessageHandler&
+    PcMessageHandler::
+    create(ParticleContainer& pc)
+    {
+        PcMessageHandler* pPcMessageHandler = new PcMessageHandler(pc);
+        return *pPcMessageHandler;
+    }
+
     void
     PcMessageHandler::
     addSendMessage

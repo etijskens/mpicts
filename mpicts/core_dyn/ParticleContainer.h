@@ -328,9 +328,15 @@ namespace mpi
         ParticleContainer& pc_;
         MessageItem<ParticleContainer>* ptr_pc_message_item_;
         Index_t nParticles_;
-    public:
+    protected:
      // ctor
+     // TODO: this ctor automatically adds the ParticleArrays to the MessageItemList.
+     // TODO: Add a way to selectively add/delete ParticleArrays and a suitable default.
         PcMessageHandler(ParticleContainer& pc);
+
+    public:
+     // Create and register a PcMessageHandler (through the proctected ctor)
+        static PcMessageHandler& create(ParticleContainer& pc);
 
         virtual
         void

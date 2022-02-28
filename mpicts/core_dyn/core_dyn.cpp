@@ -60,7 +60,7 @@ namespace test
                 a = 0;
                 for( auto & i : ints ) i = 0;
             }
-            MessageHandler hndlr;
+            MessageHandler& hndlr = MessageHandler::create();
             hndlr.messageItemList().push_back(a);
             hndlr.messageItemList().push_back(ints);
             prdbg(MessageHandler::static_info());
@@ -115,8 +115,8 @@ namespace test
         ParticleContainer pc(8, "PC");
         prdbg(pc.info());
 
-        PcMessageHandler hndlr(pc);
-
+        PcMessageHandler& hndlr = PcMessageHandler::create(pc);
+         // This MessageHandler automatically adds  pc's ParticleArrays to its MessageItemList.
         {
             int dst = mpi::next_rank();
             Indices_t indices = {1,3,5,7};

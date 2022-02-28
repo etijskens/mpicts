@@ -14,8 +14,12 @@ namespace mpi
 
  //------------------------------------------------------------------------------------------------
    class MessageHandlerRegistry
+ // Lookup MessageHandlers from their key.
+ // TODO: currently all MessageHandlers are kept for the entire time of the simulation
+ //   - how about MessageHandlers that act only once, or once and a while?
  //------------------------------------------------------------------------------------------------
     {
+        friend class MessageHandler;
     public:
         using key_type = MessageHandlerKey_t; // if this must be changed, do it in "mpicts.h".
 
@@ -63,8 +67,9 @@ namespace mpi
         mutable MessageItemList messageItemList_; // the entries reference the objects from which the message is composed
         key_type key_; // Identification key of the MessageHandler in the registry.
 
-    public:
         MessageHandler();
+    public:
+        static MessageHandler& create();
 
         virtual ~MessageHandler();
 
@@ -89,26 +94,14 @@ namespace mpi
 
         void sendMessages();
          // Allocate buffers, write the messages ito the buffers, and send them.
+         // (sends only the messages from this MessageHandler)
 
         void recvMessages();
          // receive the messages in the receive buffers, and read them into their objects
+         // (receives only the messages for this MessageHandler)
 
-    protected:
-     // Low level member functions for MessageBuffer manipulation
-//        size_t                   // number of bytes the message needs
-//        computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
-//          ( size_t i             // index of the message in sendMessages_
-//          );
-//
-//        void
-//        writeBuffer   // Write the i-th message to its messageBuffer. The buffer is automatically adjusted.
-//          ( size_t i  // index of the message in sendMessages_
-//          );
-//
-//        void
-//        readBuffer    // Read the i-th message from the messageBuffer. The buffer is automatically adjusted.
-//          ( size_t i  // index of the message in sendMessages_
-//          );
+        static void sendAllMessages(); // Send all message from all registered MessageHandlers
+        static void recvAllMessages(); // Receive all message for all registered MessageHandlers
     };
  //------------------------------------------------------------------------------------------------
 }// namespace mpi

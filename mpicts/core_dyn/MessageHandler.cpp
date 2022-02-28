@@ -40,15 +40,27 @@ namespace mpi
     MessageHandler::
     MessageHandler()
     {
-     // This has to happen somewhere
+     // This has to happen somewhere, admittedly this is not the most intuitive location for it.
+     //
         if( MessageHeader::theHeaders.size() == 0 )
         {// Make sure that there is a MessageHeaderContainer for every MPI rank
-            prdbg("MessageHeader::theHeaders.resize( (size_t) mpi::size );");
+            if constexpr(mpi::_debug_&&_debug_) {
+                prdbg("MessageHeader::theHeaders.resize( (size_t) mpi::size );");
+            }
             MessageHeader::theHeaders.resize( (size_t) mpi::size );
         }
 
         theMessageHandlerRegistry.registerMessageHandler(this);
     }
+
+    MessageHandler&
+    MessageHandler::
+    create()
+    {
+        MessageHandler* pMessageHandler = new MessageHandler();
+        return *pMessageHandler;
+    }
+
 
     MessageHandler::
     ~MessageHandler()
@@ -213,32 +225,25 @@ namespace mpi
     }
 
  //------------------------------------------------------------------------------------------------
-//    size_t                   // number of bytes the message needs
-//    MessageHandler::
-//    computeMessageBufferSize // Compute the size (bytes) that a message will occupy when written to a buffer
-//      ( size_t i             // index of the message in sendMessages_
-//      )
-//    {
-//        return messageItemList_.computeMessageBufferSize(sendMessages_[i]);
-//    }
-//
-// //------------------------------------------------------------------------------------------------
-//    void
-//    MessageHandler::
-//    writeBuffer
-//    {
-//        messageItemList_.write(pBuffer);
-//    }
-//
-// //------------------------------------------------------------------------------------------------
-//    void
-//    MessageHandler::
-//    readBuffer( void* pBuffer ) const
-//    {
-//        messageItemList_.read(pBuffer);
-//    }
+    void MessageHandler::sendAllMessages()
+    {
+        for( auto & item : theMessageHandlerRegistry.registry_ )
+        {
+            MessageHandler& hndlr = *(item.second);
+            hndlr.sendMessages();
+        }
+    }
 
  //------------------------------------------------------------------------------------------------
+    void MessageHandler::recvAllMessages()
+    {
+        for( auto & item : theMessageHandlerRegistry.registry_ )
+        {
+            MessageHandler& hndlr = *(item.second);
+            hndlr.recvMessages();
+        }
+    }
+
  //------------------------------------------------------------------------------------------------
     INFO_DEF(MessageHandler)
     {
