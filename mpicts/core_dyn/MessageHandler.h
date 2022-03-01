@@ -15,42 +15,52 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
    class MessageHandlerRegistry
  // Lookup MessageHandlers from their key.
+ // MessageHandlers are created using new and automatically added to the MessageHandlerRegistry
+ // which takes ownership of the MessageHandler
+
  // TODO: currently all MessageHandlers are kept for the entire time of the simulation
  //   - how about MessageHandlers that act only once, or once and a while?
  //------------------------------------------------------------------------------------------------
     {
         friend class MessageHandler;
     public:
-        using key_type = MessageHandlerKey_t; // if this must be changed, do it in "mpicts.h".
+        using Key_t = MessageHandlerKey_t; // if this must be changed, do it in "mpicts.h".
 
-        MessageHandlerRegistry();
-        // ~MessageHandlerRegistry() {}
+        ~MessageHandlerRegistry();
 
      // Create a MessageHandler, store it in the registry_, and return a pointer to it.
         void registerMessageHandler(MessageHandler* messageHandler);
 
-        inline MessageHandler& operator[](key_type key) {
+        inline MessageHandler& operator[](Key_t key) {
             return *registry_[key];
         }
 
         INFO_DECL;
-    private:
-        size_t counter_;
-        std::map<key_type, MessageHandler*> registry_;
-    };
 
- // A global MessageHandlerRegistry
- // Check out https://stackoverflow.com/questions/86582/singleton-how-should-it-be-used
- // for when to use singletons and how to implement them.
- // extern MessageHandlerRegistry theMessageHandlerRegistry;
+    private:
+        Key_t generateKey_();
+
+        std::map<Key_t, MessageHandler*> registry_;
+    };
 
  //------------------------------------------------------------------------------------------------
     class MessageHandler
  // Base class for message handlers
+ // Every MessageHandler has a single MessageItemList which identifies the objects from whom which
+ // data are sent, and in which data are received.
+ // A MessageHandler may send/receive any number of messages with information from the objects in
+ // the MessageItems. There is a list of messages to send (sendMessages_) and a list of messages
+ // to receive (recvMessages_). The sendMessages_ must be created in the sending process. The
+ // recvMessages_ are automatically created by the receiving processes from the MessageHeaders
+ // which are broadcasted.
+ // A MessageHandler may send
+ //   - messages to any number of destination processes
+ //   - more than one message to the same destination process (these are disambiguated using the
+ //     MPI tag)
  //------------------------------------------------------------------------------------------------
     {
     public:
-        using key_type = MessageHandlerRegistry::key_type;
+        using Key_t = MessageHandlerRegistry::Key_t;
         static MessageHandlerRegistry theMessageHandlerRegistry;
 
         static bool const _debug_ = true;
@@ -65,7 +75,7 @@ namespace mpi
 
     protected: // data
         mutable MessageItemList messageItemList_; // the entries reference the objects from which the message is composed
-        key_type key_; // Identification key of the MessageHandler in the registry.
+        Key_t key_; // Identification key of the MessageHandler in the registry.
 
         MessageHandler();
     public:
@@ -77,7 +87,7 @@ namespace mpi
         inline MessageItemList const& messageItemList() const { return messageItemList_; }
         inline MessageItemList      & messageItemList()       { return messageItemList_; }
 
-        inline MessageHandlerRegistry::key_type key() const { return key_; }
+        inline MessageHandlerRegistry::Key_t key() const { return key_; }
 
         INFO_DECL;
         STATIC_INFO_DECL;

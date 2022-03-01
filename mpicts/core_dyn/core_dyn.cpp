@@ -124,9 +124,7 @@ namespace test
 
             MessageHeader::broadcastMessageHeaders();
             hndlr.sendMessages();
-//            MPI_Barrier(MPI_COMM_WORLD);
             hndlr.recvMessages();
-
         }
         prdbg(pc.info());
         finalize();

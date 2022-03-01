@@ -7,7 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <Eigen/Geometry> //?
+#include <cstdint>
 
 
 #define CINFO INFO.c_str()
@@ -31,13 +31,12 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
 
  //---------------------------------------------------------------------------------------------------------------------
  // typedefs
-    using Lines_t = std::vector<std::string>;
-    using MessageHandlerKey_t = size_t;
+    using MessageHandlerKey_t = uint32_t;
      // This type may be modified, but there are some constraints:
      // Because we need to know the key before the message can be received, it is necessary
-     // that it can be stored in the header section of MessageBuffers. Therefor, it must be
-     // of fixed size, and, preferentially, a size that is a multiple of sizeof(Index_t).
-
+     // that it can be stored in the header section of MessageBuffers. Therefore, it must be
+     // of fixed size.
+    using MPITag_t = int;
     using Index_t = int64_t; // copied from Primitives/Types/Index.h
     using Indices_t = std::vector<Index_t>; // list of indices
 
@@ -68,6 +67,8 @@ namespace mpi // this code is both for the one-sided approach and for the two-si
  //---------------------------------------------------------------------------------------------------------------------
  // Machinery for producing debugging informaton
  //---------------------------------------------------------------------------------------------------------------------
+    using Lines_t = std::vector<std::string>; // type for a list of lines.
+
     extern std::string dbg_fname;
     extern const Lines_t nolines;
     extern int64_t timestamp0;

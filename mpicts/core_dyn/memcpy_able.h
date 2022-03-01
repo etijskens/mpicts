@@ -2,6 +2,7 @@
 #define MEMCPY_ABLE_H
 
 #include <type_traits>
+#include <Eigen/Geometry>
 
 #include "mpicts.h"
 

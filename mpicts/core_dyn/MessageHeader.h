@@ -15,10 +15,11 @@ namespace mpi
     {
         using Key_t = MessageHandlerKey_t;
 
-        Key_t  key;  // MessageHandler key of the message
-        size_t size; // message size in bytes
-        int    src;  // the source MPI rank of the message
-        int    dst;  // the destination MPI rank of the message
+        Key_t    key;  // MessageHandler key of the message
+        MPITag_t tag;  // MPI tag for the message
+        size_t   size; // message size in bytes
+        int      src;  // the source MPI rank of the message
+        int      dst;  // the destination MPI rank of the message
 
         void invalidate() {
             src = INVALID;
@@ -86,6 +87,11 @@ namespace mpi
         size_t i_; // location of the header in headers_
          // Indices are not invalidated when theHeaders is resized, as opposed to pointers and iterators.
 
+        MPITag_t generateMPITag_(); // generate a unique MPI tag
+         // All messages sent by the current MPI process will have a unique tag.
+         // Different processes will use the same tag but the combination of source MPI rank and tag is unique
+         // The tag is written in the header of the Message, so that the receiver of the message knows it too.
+
     public: // data
         using Key_t = MessageHandlerKey_t;
 
@@ -110,14 +116,16 @@ namespace mpi
      // Default copy ctor should be good to go
 
      // data member access:
-        int     src()  const { return theHeaders[src_][i_].src; }
-        int&    src()        { return theHeaders[src_][i_].src; }
-        int     dst()  const { return theHeaders[src_][i_].dst; }
-        int&    dst()        { return theHeaders[src_][i_].dst; }
-        Key_t   key()  const { return theHeaders[src_][i_].key; }
-        Key_t&  key()        { return theHeaders[src_][i_].key; }
-        size_t  size() const { return theHeaders[src_][i_].size; }
-        size_t& size()       { return theHeaders[src_][i_].size; }
+        int       src()  const { return theHeaders[src_][i_].src; }
+        int&      src()        { return theHeaders[src_][i_].src; }
+        int       dst()  const { return theHeaders[src_][i_].dst; }
+        int&      dst()        { return theHeaders[src_][i_].dst; }
+        Key_t     key()  const { return theHeaders[src_][i_].key; }
+        Key_t&    key()        { return theHeaders[src_][i_].key; }
+        MPITag_t  tag()  const { return theHeaders[src_][i_].tag; }
+        MPITag_t& tag()        { return theHeaders[src_][i_].tag; }
+        size_t    size() const { return theHeaders[src_][i_].size; }
+        size_t&   size()       { return theHeaders[src_][i_].size; }
 
         INFO_DECL;
         STATIC_INFO_DECL;

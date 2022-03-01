@@ -43,11 +43,12 @@ namespace mpi
         void allocateBuffer();
 
 
-        Key_t   key()  const { return messageHeader_.key(); }
-        int     src()  const { return messageHeader_.src(); }
-        int     dst()  const { return messageHeader_.dst(); }
-        size_t  size() const { return messageHeader_.size(); }
-        size_t& size()       { return messageHeader_.size(); } // the size of the message
+        Key_t    key()  const { return messageHeader_.key(); }
+        MPITag_t tag()  const { return messageHeader_.tag(); }
+        int      src()  const { return messageHeader_.src(); }
+        int      dst()  const { return messageHeader_.dst(); }
+        size_t   size() const { return messageHeader_.size(); }
+        size_t&  size()       { return messageHeader_.size(); } // the size of the message
 
         void*   bufferPtr()  const { return messageBuffer_.ptr(); }
         size_t  bufferSize() const { return messageBuffer_.size(); } // the size of the buffer, >= the size of the message

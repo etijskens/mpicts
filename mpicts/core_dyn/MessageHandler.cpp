@@ -5,17 +5,34 @@ namespace mpi
  //------------------------------------------------------------------------------------------------
  // MessageHandlerRegistry implementation
  //------------------------------------------------------------------------------------------------
-
     MessageHandlerRegistry::
-    MessageHandlerRegistry() : counter_(0) {}
+    ~MessageHandlerRegistry()
+    {
+        for( auto& entry : registry_ )
+        {// The registry_ is the owner of all created MessageHandlers. Hence, we must delete them
+         // when registry_ is destroyed.
+            MessageHandler*& pMessageHandler = entry.second;
+            if( pMessageHandler ) {
+                delete pMessageHandler;
+                pMessageHandler = 0;
+            }
+        }
+
+        if constexpr(mpi::_debug_&&_debug_) {
+            std::string s("MessageHandlerRegistry::~MessageHandlerRegistry()");
+            for( auto& entry : registry_ )
+                s += concatenate("\n  ", entry.first, " : ", entry.second);
+            prdbg(s);
+        }
+    }
 
     void
     MessageHandlerRegistry::
     registerMessageHandler(MessageHandler* pMessageHandler)
     {
-        registry_[counter_] = pMessageHandler;
-        pMessageHandler->key_ = counter_;
-        ++counter_;
+        Key_t key = generateKey_();
+        registry_[key] = pMessageHandler;
+        pMessageHandler->key_ = key;
     }
 
     INFO_DEF(MessageHandlerRegistry)
@@ -30,6 +47,14 @@ namespace mpi
             ss<<"( empty )";
         }
         return ss.str();
+    }
+
+    MessageHandlerRegistry::Key_t
+    MessageHandlerRegistry::
+    generateKey_()
+    {
+        static Key_t next_key_ = 0;
+        return next_key_++;
     }
 
  //------------------------------------------------------------------------------------------------
@@ -143,7 +168,7 @@ namespace mpi
                   , pMessageData->size()        // number of Index_t elements to send
                   , MPI_CHAR
                   , pMessageData->dst()         // the destination
-                  , pMessageData->key()         // the tag
+                  , pMessageData->tag()         // the tag
                   , MPI_COMM_WORLD
                   , &request
                   );
@@ -206,7 +231,7 @@ namespace mpi
               , pMessageData->size()      // number of elements to receive
               , MPI_CHAR
               , pMessageData->src()       // source rank
-              , pMessageData->key()       // tag
+              , pMessageData->tag()       // tag
               , MPI_COMM_WORLD
               , MPI_STATUS_IGNORE
               );

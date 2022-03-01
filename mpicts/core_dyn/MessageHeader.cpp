@@ -11,6 +11,7 @@ namespace mpi
         ss<<indent<<"MessageHeaderData.info("<<title<<") : ( source="     <<src
                                                         <<", destination="<<dst
                                                         <<", key="        <<key
+                                                        <<", tag="        <<tag
                                                         <<", size="       <<size
                                                         <<" )";
         return ss.str();
@@ -89,6 +90,7 @@ namespace mpi
         alloc_();
         MessageHeaderData& data = theHeaders[src][i_];
         data.key  = key;
+        data.tag  = generateMPITag_();
         data.size = sz;
         data.src  = src;
         data.dst  = dst;
@@ -233,5 +235,22 @@ namespace mpi
                 prdbg(MessageHandler::static_info("\n","broadcastMessageHeaders done"));
         }
     }
+
+    MPITag_t
+    MessageHeader::
+    generateMPITag_()
+    {
+        static MPITag_t next_tag = 0;
+         // Despite the type of MPI tags is int, negative tags are not allowed.
+        MPITag_t tag = next_tag++;
+        if constexpr(mpi::_debug_&&_debug_) {
+            prdbg(concatenate( "MessageHeader.generateMPITag_() :"
+                             , "\n  generated=", tag
+                             , "\n  next=", next_tag
+            ));
+        }
+        return tag;
+    }
+
  //------------------------------------------------------------------------------------------------
 }// namespace mpi
